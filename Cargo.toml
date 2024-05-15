@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = [
+	"grpc",
+	"server",
+]
+
+[workspace.dependencies]
+grpc = { path = "./grpc" } 
+server = { path = "./server" } 
