@@ -1,21 +1,19 @@
 [package]
-name = "server"
+name = "chain-state"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "3.2.5", features = ["cargo"] }
-config = "0.13.3"
-ethers = { version = "2.0.4", features = ["ws", "rustls", "openssl"] }
-tokio = { version = "1.28.1", features = ["full"] }
 anyhow = { version = "1.0.71", features = ["backtrace"] }
+ethers = { version = "2.0.4", features = ["ws", "rustls", "openssl"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
+tokio = { version = "1.28.1", features = ["full"] }
+contract-interface = { workspace = true }
+utils = { workspace = true }
 storage = { workspace = true }
-grpc = { workspace = true }
-chain-state = { workspace = true }
 ark-ec = "0.4"
 ark-bn254 = "0.4"
 ark-ff = "0.4"

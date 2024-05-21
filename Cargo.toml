@@ -3,8 +3,19 @@ resolver = "2"
 members = [
 	"grpc",
 	"server",
+	"contract-interface",
+	"storage",
+	"chain-state",
+	"utils"
 ]
 
 [workspace.dependencies]
 grpc = { path = "./grpc" } 
 server = { path = "./server" } 
+contract-interface = { path = "./contract-interface" }
+chain-state = { path = "./chain-state" }
+storage = { path = "./storage" }
+utils = { path = "./utils" }
+
+[profile.release]
+panic = 'abort'

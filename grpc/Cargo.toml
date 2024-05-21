@@ -6,10 +6,22 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = { version = "1.0.71", features = ["backtrace"] }
 prost = "0.12.3"
 tonic = "0.11.0"
 tracing = "0.1.40"
 once_cell = "1.19.0"
+storage = { workspace = true }
+utils = { workspace = true }
+chain-state = { workspace = true }
+ark-ec = "0.4"
+ark-bn254 = "0.4"
+ark-ff = "0.4"
+ark-serialize = "0.4"
+tokio = { version = "1.28.1", features = ["full"] }
+zg-encoder = { git = "https://github.com/0glabs/0g-da-encoder.git", branch = "signer-fix" }
+encoder-service = { git = "https://github.com/0glabs/0g-da-encoder.git", branch = "signer-fix", package = "grpc" }
+ethers = { version = "2.0.4", features = ["ws", "rustls", "openssl"] }
 
 [build-dependencies]
 tonic-build = { version="0.11.0", features = ["prost"] }
