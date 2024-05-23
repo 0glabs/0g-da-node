@@ -6,6 +6,7 @@ use anyhow::{anyhow, bail};
 use ark_bn254::{Fr, G1Affine, G1Projective};
 use ark_ec::CurveGroup;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use chain_state::signers_handler::serialize_g1_point;
 use chain_state::ChainState;
 use encoder_service::EncoderService;
 use ethers::abi::{self, Token};
@@ -178,24 +179,83 @@ impl SignerService {
     }
 }
 
+fn u256_to_u8_array(x: U256) -> Vec<u8> {
+    let mut bytes = [0; 32];
+    x.to_big_endian(&mut bytes);
+    bytes.to_vec()
+}
+
 pub fn blob_verified_hash(
     data_root: &[u8; 32],
     epoch: u64,
     quorum_id: u64,
     erasure_commitment: &G1Projective,
 ) -> G1Affine {
-    let mut value = Vec::new();
-    erasure_commitment
-        .into_affine()
-        .serialize_uncompressed(&mut value);
+    let g1_point = serialize_g1_point(erasure_commitment.into_affine());
     let hash = keccak256(
         abi::encode_packed(&[
             Token::FixedBytes(data_root.to_vec()),
-            Token::Uint(U256::from(epoch)),
-            Token::Uint(U256::from(quorum_id)),
-            Token::FixedBytes(value),
+            Token::FixedBytes(u256_to_u8_array(U256::from(epoch))),
+            Token::FixedBytes(u256_to_u8_array(U256::from(quorum_id))),
+            Token::FixedBytes(u256_to_u8_array(g1_point.x)),
+            Token::FixedBytes(u256_to_u8_array(g1_point.y)),
         ])
         .unwrap(),
     );
     map_to_g1(hash.to_vec())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use ark_bn254::g1;
+    use ark_ec::AffineRepr;
+    use ark_ff::Fp;
+    use zg_encoder::constants::G1A;
+
+    use super::*;
+
+    fn hex_to_bytes(s: &str) -> Option<Vec<u8>> {
+        if s.len() % 2 == 0 {
+            (0..s.len())
+                .step_by(2)
+                .map(|i| {
+                    s.get(i..i + 2)
+                        .and_then(|sub| u8::from_str_radix(sub, 16).ok())
+                })
+                .collect()
+        } else {
+            None
+        }
+    }
+
+    #[test]
+    fn blob_verified_hash_test() {
+        let a = g1::G1Affine::generator() * Fr::from(1);
+        let hash = blob_verified_hash(
+            &hex_to_bytes("1111111111111111111111111111111111111111111111111111111111111111")
+                .unwrap()
+                .try_into()
+                .unwrap(),
+            1,
+            2,
+            &G1Projective::new(Fp::from(1), Fp::from(2), Fp::from(1)),
+        );
+        assert_eq!(
+            hash,
+            G1Affine::new(
+                num_bigint::BigUint::from_str(
+                    "3104132272622526655068902279970515367044771064982988265068273751564440697689"
+                )
+                .unwrap()
+                .into(),
+                num_bigint::BigUint::from_str(
+                    "14983672482514514723382346054400511740670770934276906876175822994665721348371"
+                )
+                .unwrap()
+                .into(),
+            )
+        );
+    }
 }

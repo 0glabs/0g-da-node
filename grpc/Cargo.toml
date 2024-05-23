@@ -22,6 +22,7 @@ tokio = { version = "1.28.1", features = ["full"] }
 zg-encoder = { git = "https://github.com/0glabs/0g-da-encoder.git", branch = "signer-fix" }
 encoder-service = { git = "https://github.com/0glabs/0g-da-encoder.git", branch = "signer-fix", package = "grpc" }
 ethers = { version = "2.0.4", features = ["ws", "rustls", "openssl"] }
+num-bigint = { version = "0.4", default-features = false }
 
 [build-dependencies]
 tonic-build = { version="0.11.0", features = ["prost"] }

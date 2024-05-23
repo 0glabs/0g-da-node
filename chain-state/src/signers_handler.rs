@@ -22,7 +22,7 @@ use crate::{transactor::TransactionInfo, ChainState};
 const PUBKEY_REGISTRATION_DOMAIN: &[u8] = "0G_BN254_Pubkey_Registration".as_bytes();
 const BLOCK_PER_EPOCH: u64 = 10;
 
-fn serialize_g1_point(point: G1Affine) -> G1Point {
+pub fn serialize_g1_point(point: G1Affine) -> G1Point {
     let mut value: Vec<u8> = Vec::new();
     point
         .x()
@@ -40,7 +40,7 @@ fn serialize_g1_point(point: G1Affine) -> G1Point {
     G1Point { x, y }
 }
 
-fn serialize_g2_point(point: G2Affine) -> G2Point {
+pub fn serialize_g2_point(point: G2Affine) -> G2Point {
     let mut value: Vec<u8> = Vec::new();
     point
         .x()

@@ -90,7 +90,7 @@ async fn check_data_upload(chain_state: Arc<ChainState>, l: u64, r: u64) -> Resu
             data: log.data.to_vec(),
         }) {
             Ok(event) => {
-                let epoch = event.id.as_u64();
+                let epoch = event.epoch.as_u64();
                 let quorum_id = event.quorum_id.as_u64();
                 let maybe_blob_status = chain_state
                     .db
@@ -121,7 +121,7 @@ async fn check_data_upload(chain_state: Arc<ChainState>, l: u64, r: u64) -> Resu
 async fn check_data_verified(chain_state: Arc<ChainState>, l: u64, r: u64) -> Result<()> {
     let filter: ethers::types::Filter = chain_state
         .da_entrance
-        .commit_root_verified_filter()
+        .erasure_commitment_verified_filter()
         .from_block(l)
         .to_block(r)
         .address(chain_state.da_entrance.address().into())
@@ -132,7 +132,7 @@ async fn check_data_verified(chain_state: Arc<ChainState>, l: u64, r: u64) -> Re
             data: log.data.to_vec(),
         }) {
             Ok(event) => {
-                let epoch = event.id.as_u64();
+                let epoch = event.epoch.as_u64();
                 let quorum_id = event.quorum_id.as_u64();
                 let maybe_blob_status = chain_state
                     .db
