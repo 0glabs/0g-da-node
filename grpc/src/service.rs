@@ -21,7 +21,6 @@ use storage::Storage;
 use tokio::sync::RwLock;
 use tonic::metadata::KeyAndMutValueRef;
 use tonic::{Code, Request, Response, Status};
-use tracing::info;
 use utils::map_to_g1;
 use zg_encoder::amt_merkle::slice::EncodedSliceAKM;
 

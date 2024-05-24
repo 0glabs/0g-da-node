@@ -63,10 +63,8 @@ impl Context {
                 Arc::new(Mutex::new(Transactor::new(signer.clone(), &eth_rpc_url)?));
             let da_entrance_address = H160::from_str(&settings.get_string("da_entrance_address")?)?;
             // bn254 keys
-            let signer_private_key: Fr = settings
-                .get_string("signer_private_key")?
-                .parse::<u128>()?
-                .into();
+            let signer_private_key: Fr =
+                Fr::from_str(&settings.get_string("signer_private_key")?).unwrap();
             // db
             let db = Arc::new(RwLock::new(Storage::new(
                 settings.get_string("data_path")?,

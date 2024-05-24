@@ -1690,6 +1690,7 @@ dependencies = [
  "tonic",
  "tonic-build",
  "tracing",
+ "tracing-subscriber",
  "utils",
  "zg-encoder",
 ]
@@ -3571,6 +3572,7 @@ dependencies = [
  "config",
  "ethers",
  "grpc 0.1.0",
+ "num-bigint",
  "storage",
  "tokio",
  "tracing",

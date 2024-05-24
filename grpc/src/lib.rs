@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate tracing;
+
 mod service;
 
 use crate::service::signer::signer_server::SignerServer;
@@ -18,6 +21,7 @@ pub async fn run_server(
     addr: SocketAddr,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let signer_service = SignerService::new(db, chain_state, signer_private_key);
+    info!("grpc server listening {:?}", addr);
     Server::builder()
         .add_service(
             SignerServer::new(signer_service)

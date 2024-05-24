@@ -10,6 +10,7 @@ use contract_interface::da_signers::{G1Point, G2Point, SignerDetail};
 use ethers::{
     providers::Middleware,
     types::{BlockNumber, TransactionRequest, H160, U256},
+    utils::keccak256,
 };
 
 use storage::quorum_db::{AssignedSlices, QuorumDB};
@@ -20,7 +21,6 @@ use utils::{left_pad_zeros, map_to_g1};
 use crate::{transactor::TransactionInfo, ChainState};
 
 const PUBKEY_REGISTRATION_DOMAIN: &[u8] = "0G_BN254_Pubkey_Registration".as_bytes();
-const BLOCK_PER_EPOCH: u64 = 10;
 
 pub fn serialize_g1_point(point: G1Affine) -> G1Point {
     let mut value: Vec<u8> = Vec::new();
@@ -70,15 +70,15 @@ fn signer_registration_hash(signer_address: H160, chain_id: u64) -> G1Affine {
     message.append(&mut signer_address.to_fixed_bytes().to_vec());
     message.append(&mut left_pad_zeros(chain_id, 32));
     message.append(&mut PUBKEY_REGISTRATION_DOMAIN.to_vec());
-    map_to_g1(message)
+    map_to_g1(keccak256(message).to_vec())
 }
 
 fn epoch_registration_hash(signer_address: H160, epoch: u64, chain_id: u64) -> G1Affine {
     let mut message = vec![];
     message.append(&mut signer_address.to_fixed_bytes().to_vec());
-    message.append(&mut left_pad_zeros(epoch, 32));
+    message.append(&mut left_pad_zeros(epoch, 8));
     message.append(&mut left_pad_zeros(chain_id, 32));
-    map_to_g1(message)
+    map_to_g1(keccak256(message).to_vec())
 }
 
 impl ChainState {
@@ -205,8 +205,15 @@ async fn check_epoch(chain_state: Arc<ChainState>, signer_private_key: Fr) -> Re
     {
         Some(b) => {
             if let Some(bn) = b.number {
-                check_new_quorums(chain_state.clone(), bn.as_u64()).await?;
-                check_new_registration(chain_state.clone(), signer_private_key, bn.as_u64())
+                let epoch = (chain_state
+                    .da_signers
+                    .epoch_number()
+                    .block(bn)
+                    .call()
+                    .await?)
+                    .as_u64();
+                check_new_quorums(chain_state.clone(), epoch).await?;
+                check_new_registration(chain_state.clone(), signer_private_key, epoch + 1)
                     .await?;
                 Ok(())
             } else {
@@ -222,9 +229,8 @@ async fn check_epoch(chain_state: Arc<ChainState>, signer_private_key: Fr) -> Re
 async fn check_new_registration(
     chain_state: Arc<ChainState>,
     signer_private_key: Fr,
-    bn: u64,
+    next_epoch: u64,
 ) -> Result<()> {
-    let next_epoch = bn / BLOCK_PER_EPOCH + 1;
     if !chain_state
         .da_signers
         .registered_epoch(chain_state.signer_address, U256::from(next_epoch))
@@ -277,8 +283,7 @@ async fn check_new_registration(
     Ok(())
 }
 
-async fn check_new_quorums(chain_state: Arc<ChainState>, bn: u64) -> Result<()> {
-    let epoch = bn / BLOCK_PER_EPOCH;
+async fn check_new_quorums(chain_state: Arc<ChainState>, epoch: u64) -> Result<()> {
     chain_state.fetch_quorum_if_missing(epoch).await?;
     Ok(())
 }

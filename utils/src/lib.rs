@@ -18,6 +18,6 @@ pub fn map_to_g1(digest: Vec<u8>) -> G1Affine {
 
 pub fn left_pad_zeros(x: u64, l: usize) -> Vec<u8> {
     let mut res = vec![0; l - 8];
-    res.append(&mut x.to_le_bytes().to_vec());
+    res.append(&mut x.to_be_bytes().to_vec());
     res
 }
