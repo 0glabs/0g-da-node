@@ -1,0 +1,13 @@
+log_level = "info"
+
+data_path = "./db/"
+
+grpc_listen_address = "0.0.0.0:34000"
+eth_rpc_endpoint = "http://0.0.0.0:8545"
+socket_address = "https://your.signer.com"
+
+da_entrance_address = "0x64fcfde2350E08E7BaDc18771a7674FAb5E137a2"
+start_block_number = 0
+
+signer_private_key = "1"
+validator_private_key = ""
