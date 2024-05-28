@@ -252,5 +252,22 @@ mod tests {
                 .into(),
             )
         );
+        let signer_private_key: Fr = Fr::from_str("1").unwrap();
+        let signature = (hash * signer_private_key).into_affine();
+        assert_eq!(
+            signature,
+            G1Affine::new(
+                num_bigint::BigUint::from_str(
+                    "3104132272622526655068902279970515367044771064982988265068273751564440697689"
+                )
+                .unwrap()
+                .into(),
+                num_bigint::BigUint::from_str(
+                    "14983672482514514723382346054400511740670770934276906876175822994665721348371"
+                )
+                .unwrap()
+                .into(),
+            )
+        );
     }
 }

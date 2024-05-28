@@ -50,7 +50,7 @@ async fn check_da_logs(chain_state: Arc<ChainState>) -> Result<()> {
         Some(b) => {
             if let Some(bn) = b.number {
                 let to = bn.as_u64();
-                if to > from {
+                if to >= from {
                     info!(
                         "checking da entrance logs from {:?} to {:?} block..",
                         from, to

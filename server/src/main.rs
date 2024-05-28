@@ -7,7 +7,9 @@ use std::{error::Error, net::SocketAddr, str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
 use ark_bn254::Fr;
-use chain_state::{signers_handler::start_epoch_registration, ChainState};
+use chain_state::{
+    da_handler::start_da_monitor, signers_handler::start_epoch_registration, ChainState,
+};
 use grpc::run_server;
 use storage::Storage;
 use tokio::{signal, sync::RwLock};
@@ -52,6 +54,7 @@ async fn setup_chain_state(ctx: &Context) -> Result<Arc<ChainState>> {
         .check_signer_registration(ctx.signer_private_key, ctx.socket_address.clone())
         .await?;
     start_epoch_registration(chain_state.clone(), ctx.signer_private_key);
+    start_da_monitor(chain_state.clone(), ctx.start_block_number).await?;
     Ok(chain_state)
 }
 
