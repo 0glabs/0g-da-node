@@ -6,7 +6,8 @@ members = [
 	"contract-interface",
 	"storage",
 	"chain-state",
-	"utils"
+	"utils",
+	"client"
 ]
 
 [workspace.dependencies]
@@ -16,6 +17,7 @@ contract-interface = { path = "./contract-interface" }
 chain-state = { path = "./chain-state" }
 storage = { path = "./storage" }
 utils = { path = "./utils" }
+client = { paht = "./client" }
 
 zg-encoder = { git = "https://github.com/0glabs/0g-da-encoder.git", rev = "289709d" }
 

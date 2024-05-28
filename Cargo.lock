@@ -685,6 +685,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "client"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ark-bn254",
+ "ark-ec",
+ "ark-ff",
+ "ark-serialize",
+ "grpc",
+ "tokio",
+ "utils",
+]
+
+[[package]]
 name = "coins-bip32"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1701,6 +1715,7 @@ dependencies = [
  "ark-serialize",
  "chain-state",
  "ethers",
+ "hex",
  "num-bigint",
  "once_cell",
  "prost",

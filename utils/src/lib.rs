@@ -2,6 +2,20 @@ use ark_bn254::{Fq, G1Affine};
 
 use ark_ff::Field;
 
+pub fn hex_to_bytes(s: &str) -> Option<Vec<u8>> {
+    if s.len() % 2 == 0 {
+        (0..s.len())
+            .step_by(2)
+            .map(|i| {
+                s.get(i..i + 2)
+                    .and_then(|sub| u8::from_str_radix(sub, 16).ok())
+            })
+            .collect()
+    } else {
+        None
+    }
+}
+
 pub fn map_to_g1(digest: Vec<u8>) -> G1Affine {
     let one = Fq::from(1);
     let three = Fq::from(3);

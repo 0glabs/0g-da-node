@@ -1,0 +1,16 @@
+[package]
+name = "client"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1.28.1", features = ["full"] }
+anyhow = { version = "1.0.71", features = ["backtrace"] }
+ark-ec = "0.4"
+ark-bn254 = "0.4"
+ark-ff = "0.4"
+ark-serialize = "0.4"
+grpc = { workspace = true }
+utils = { workspace = true }

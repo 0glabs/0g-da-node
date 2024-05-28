@@ -207,23 +207,10 @@ mod tests {
     use ark_bn254::g1;
     use ark_ec::AffineRepr;
     use ark_ff::Fp;
+    use utils::hex_to_bytes;
     use zg_encoder::constants::G1A;
 
     use super::*;
-
-    fn hex_to_bytes(s: &str) -> Option<Vec<u8>> {
-        if s.len() % 2 == 0 {
-            (0..s.len())
-                .step_by(2)
-                .map(|i| {
-                    s.get(i..i + 2)
-                        .and_then(|sub| u8::from_str_radix(sub, 16).ok())
-                })
-                .collect()
-        } else {
-            None
-        }
-    }
 
     #[test]
     fn blob_verified_hash_test() {

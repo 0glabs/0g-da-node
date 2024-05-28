@@ -3,7 +3,7 @@ use std::{cmp, sync::Arc, time::Duration};
 use crate::ChainState;
 
 use anyhow::{anyhow, bail, Result};
-use contract_interface::da_entrance::DataUploadFilter;
+use contract_interface::da_entrance::{DataUploadFilter, ErasureCommitmentVerifiedFilter};
 use ethers::{abi::RawLog, prelude::EthLogDecode, providers::Middleware, types::BlockNumber};
 use storage::{
     blob_status_db::{BlobStatus, BlobStatusDB},
@@ -135,7 +135,7 @@ async fn check_data_verified(chain_state: Arc<ChainState>, l: u64, r: u64) -> Re
         .address(chain_state.da_entrance.address().into())
         .filter;
     for log in chain_state.provider.get_logs(&filter).await? {
-        match DataUploadFilter::decode_log(&RawLog {
+        match ErasureCommitmentVerifiedFilter::decode_log(&RawLog {
             topics: log.topics,
             data: log.data.to_vec(),
         }) {

@@ -6,6 +6,7 @@ mod service;
 use crate::service::signer::signer_server::SignerServer;
 use ark_bn254::Fr;
 use chain_state::ChainState;
+pub use service::signer;
 use service::SignerService;
 use std::{net::SocketAddr, sync::Arc};
 use storage::Storage;
