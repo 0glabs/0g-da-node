@@ -51,9 +51,13 @@ async fn check_da_logs(chain_state: Arc<ChainState>) -> Result<()> {
             if let Some(bn) = b.number {
                 let to = bn.as_u64();
                 if to > from {
+                    info!(
+                        "checking da entrance logs from {:?} to {:?} block..",
+                        from, to
+                    );
                     check_data_logs(chain_state.clone(), from, to).await?;
                 }
-                chain_state.db.write().await.put_progress(to).await?;
+                chain_state.db.write().await.put_progress(to + 1).await?;
             } else {
                 bail!(anyhow!("block number is empty"));
             }
@@ -107,6 +111,10 @@ async fn check_data_upload(chain_state: Arc<ChainState>, l: u64, r: u64) -> Resu
                             .await
                             .put_blob(epoch, quorum_id, event.data_root, BlobStatus::UPLOADED)
                             .await?;
+                        info!(
+                            "new file found, epoch: {:?}, quorum_id: {:?}, data_root: {:X?}",
+                            epoch, quorum_id, event.data_root
+                        );
                     }
                 }
             }
@@ -151,6 +159,10 @@ async fn check_data_verified(chain_state: Arc<ChainState>, l: u64, r: u64) -> Re
                         .await
                         .put_blob(epoch, quorum_id, event.data_root, BlobStatus::VERIFIED)
                         .await?;
+                    info!(
+                        "file verified, epoch: {:?}, quorum_id: {:?}, data_root: {:X?}",
+                        epoch, quorum_id, event.data_root
+                    );
                 }
             }
             Err(e) => {

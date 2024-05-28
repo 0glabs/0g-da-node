@@ -85,7 +85,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     start_server(ctx).await?;
 
     tokio::select! {
-        _ = signal::ctrl_c() => {},
+        _ = signal::ctrl_c() => {
+            info!("terminate signal received, stopping..");
+        },
     }
 
     Ok(())
