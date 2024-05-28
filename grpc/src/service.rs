@@ -94,16 +94,6 @@ impl Signer for SignerService {
                                 )
                             })?;
                             encoded_slices.push(encoded_slice);
-                            let hash = blob_verified_hash(
-                                &storage_root,
-                                req.epoch,
-                                req.quorum_id,
-                                &erasure_commitment,
-                            );
-                            let signature = (hash * self.signer_private_key).into_affine();
-                            let mut value = Vec::new();
-                            signature.serialize_uncompressed(&mut value);
-                            reply.signatures.push(value);
                         }
                         self.verify_encoded_slices(
                             req.epoch,
@@ -116,6 +106,16 @@ impl Signer for SignerService {
                         .map_err(|e| {
                             Status::new(Code::Internal, format!("verification failed: {:?}", e))
                         })?;
+                        let hash = blob_verified_hash(
+                            &storage_root,
+                            req.epoch,
+                            req.quorum_id,
+                            &erasure_commitment,
+                        );
+                        let signature = (hash * self.signer_private_key).into_affine();
+                        let mut value = Vec::new();
+                        signature.serialize_uncompressed(&mut value);
+                        reply.signatures.push(value);
                     }
                     BlobStatus::VERIFIED => {
                         return Err(Status::new(Code::Internal, "blob verified already"));
