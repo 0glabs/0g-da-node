@@ -19,8 +19,10 @@ pub async fn run_server(
     chain_state: Arc<ChainState>,
     signer_private_key: Fr,
     addr: SocketAddr,
+    encoder_params_dir: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let signer_service = SignerService::new(db, chain_state, signer_private_key);
+    let signer_service =
+        SignerService::new(db, chain_state, signer_private_key, encoder_params_dir);
     info!("grpc server listening {:?}", addr);
     Server::builder()
         .add_service(

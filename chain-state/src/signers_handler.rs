@@ -213,8 +213,7 @@ async fn check_epoch(chain_state: Arc<ChainState>, signer_private_key: Fr) -> Re
                     .await?)
                     .as_u64();
                 check_new_quorums(chain_state.clone(), epoch).await?;
-                check_new_registration(chain_state.clone(), signer_private_key, epoch + 1)
-                    .await?;
+                check_new_registration(chain_state.clone(), signer_private_key, epoch + 1).await?;
                 Ok(())
             } else {
                 bail!(anyhow!("block number is empty"));

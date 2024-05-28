@@ -28,6 +28,7 @@ mod cli {
 
 pub struct Context {
     pub log_level: String,
+    pub encoder_params_dir: String,
     pub grpc_listen_address: String,
     pub socket_address: String,
     pub eth_rpc_url: String,
@@ -80,6 +81,7 @@ impl Context {
                 da_entrance_address,
                 signer_private_key,
                 db,
+                encoder_params_dir: settings.get_string("encoder_params_dir")?,
             })
         } else {
             bail!(anyhow!("Config file missing!"));

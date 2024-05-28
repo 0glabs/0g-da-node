@@ -17,5 +17,7 @@ chain-state = { path = "./chain-state" }
 storage = { path = "./storage" }
 utils = { path = "./utils" }
 
+zg-encoder = { git = "https://github.com/0glabs/0g-da-encoder.git", rev = "289709d" }
+
 [profile.release]
 panic = 'abort'

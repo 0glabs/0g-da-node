@@ -89,6 +89,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "amt"
+version = "0.1.0"
+source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d#289709d17c88a82d46823d99f29db7be287c4e22"
+dependencies = [
+ "anyhow",
+ "ark-bn254",
+ "ark-ec",
+ "ark-ff",
+ "ark-poly",
+ "ark-serialize",
+ "ark-std",
+ "base64 0.22.1",
+ "error-chain",
+ "once_cell",
+ "rand",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1681,7 +1701,6 @@ dependencies = [
  "ark-serialize",
  "chain-state",
  "ethers",
- "grpc 0.1.0 (git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix)",
  "num-bigint",
  "once_cell",
  "prost",
@@ -1692,25 +1711,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "utils",
- "zg-encoder",
-]
-
-[[package]]
-name = "grpc"
-version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix#95e7d9a368a7bb26e5c689d5e8473d434935365a"
-dependencies = [
- "amt",
- "ark-bn254",
- "once_cell",
- "prost",
- "rand",
- "rayon",
- "tonic",
- "tonic-build",
- "tracing",
- "types",
- "zg-encoder",
+ "zg-encoder 0.1.0 (git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d)",
 ]
 
 [[package]]
@@ -3571,7 +3572,7 @@ dependencies = [
  "clap",
  "config",
  "ethers",
- "grpc 0.1.0",
+ "grpc",
  "num-bigint",
  "storage",
  "tokio",
@@ -3743,7 +3744,7 @@ dependencies = [
  "serde_json",
  "tracing",
  "tracing-subscriber",
- "zg-encoder",
+ "zg-encoder 0.1.0 (git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix)",
 ]
 
 [[package]]
@@ -4333,11 +4334,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
-name = "types"
-version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix#95e7d9a368a7bb26e5c689d5e8473d434935365a"
-
-[[package]]
 name = "ucd-trie"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4854,7 +4850,7 @@ name = "zg-encoder"
 version = "0.1.0"
 source = "git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix#95e7d9a368a7bb26e5c689d5e8473d434935365a"
 dependencies = [
- "amt",
+ "amt 0.1.0 (git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix)",
  "ark-bn254",
  "ark-ec",
  "ark-ff",
@@ -4869,6 +4865,31 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "zg-encoder"
+version = "0.1.0"
+source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d#289709d17c88a82d46823d99f29db7be287c4e22"
+dependencies = [
+ "amt 0.1.0 (git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d)",
+ "ark-bn254",
+ "ark-ec",
+ "ark-ff",
+ "ark-poly",
+ "ark-serialize",
+ "ark-std",
+ "ethereum-types",
+ "hash-db",
+ "keccak-hash",
+ "keccak-hasher",
+ "once_cell",
+ "rand",
+ "serde",
+ "serde_json",
+ "static_assertions",
+ "tiny-keccak",
+ "tracing",
 ]
 
 [[package]]

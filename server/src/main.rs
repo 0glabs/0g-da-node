@@ -20,6 +20,7 @@ async fn start_grpc_server(
     chain_state: Arc<ChainState>,
     signer_private_key: Fr,
     server_addr: String,
+    encoder_params_dir: String,
 ) -> Result<()> {
     info!("starting grpc server at {:?}", server_addr);
     tokio::spawn(async move {
@@ -28,6 +29,7 @@ async fn start_grpc_server(
             chain_state,
             signer_private_key,
             SocketAddr::from_str(&server_addr).unwrap(),
+            encoder_params_dir,
         )
         .await
         .map_err(|e| anyhow!(e.to_string()))
@@ -60,6 +62,7 @@ async fn start_server(ctx: Context) -> Result<()> {
         chain_state.clone(),
         ctx.signer_private_key,
         ctx.grpc_listen_address.clone(),
+        ctx.encoder_params_dir.clone(),
     )
     .await?;
     Ok(())

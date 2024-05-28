@@ -8,11 +8,9 @@ use ark_ec::CurveGroup;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use chain_state::signers_handler::serialize_g1_point;
 use chain_state::ChainState;
-use encoder_service::EncoderService;
 use ethers::abi::{self, Token};
 use ethers::types::U256;
 use ethers::utils::keccak256;
-use std::f64::consts::E;
 use std::sync::Arc;
 use std::time::Instant;
 use storage::blob_status_db::{BlobStatus, BlobStatusDB};
@@ -22,7 +20,7 @@ use tokio::sync::RwLock;
 use tonic::metadata::KeyAndMutValueRef;
 use tonic::{Code, Request, Response, Status};
 use utils::map_to_g1;
-use zg_encoder::amt_merkle::slice::EncodedSliceAKM;
+use zg_encoder::{EncodedSlice, ZgEncoderParams};
 
 pub mod signer {
     tonic::include_proto!("signer");
@@ -32,7 +30,7 @@ pub struct SignerService {
     db: Arc<RwLock<Storage>>,
     chain_state: Arc<ChainState>,
     signer_private_key: Fr,
-    encoder_service: EncoderService,
+    encoder_params: ZgEncoderParams,
 }
 
 impl SignerService {
@@ -40,12 +38,13 @@ impl SignerService {
         db: Arc<RwLock<Storage>>,
         chain_state: Arc<ChainState>,
         signer_private_key: Fr,
+        encoder_params_dir: String,
     ) -> Self {
         Self {
             db,
             chain_state,
             signer_private_key,
-            encoder_service: EncoderService::new(),
+            encoder_params: ZgEncoderParams::from_dir_mont(encoder_params_dir, true),
         }
     }
 }
@@ -85,14 +84,15 @@ impl Signer for SignerService {
                     BlobStatus::UPLOADED => {
                         let mut encoded_slices = vec![];
                         for data in req.encoded_slice.iter() {
-                            let encoded_slice =
-                                EncodedSliceAKM::deserialize_uncompressed(&*data.to_vec())
-                                    .map_err(|e| {
-                                        Status::new(
-                                            Code::InvalidArgument,
-                                            format!("failed to deserialize slice: {:?}", e),
-                                        )
-                                    })?;
+                            let encoded_slice = EncodedSlice::deserialize_uncompressed(
+                                &*data.to_vec(),
+                            )
+                            .map_err(|e| {
+                                Status::new(
+                                    Code::InvalidArgument,
+                                    format!("failed to deserialize slice: {:?}", e),
+                                )
+                            })?;
                             encoded_slices.push(encoded_slice);
                             let hash = blob_verified_hash(
                                 &storage_root,
@@ -137,7 +137,7 @@ impl SignerService {
         quorum_id: u64,
         storage_root: &[u8; 32],
         erasure_commitment: &G1Projective,
-        encoded_slices: &Vec<EncodedSliceAKM>,
+        encoded_slices: &Vec<EncodedSlice>,
     ) -> anyhow::Result<()> {
         // in case quorum info is missing
         let quorum_num = self.chain_state.fetch_quorum_if_missing(epoch).await?;
@@ -162,12 +162,8 @@ impl SignerService {
                         bail!(anyhow!("assigned slices and given slices index mismatch"));
                     }
                     slice
-                        .verify(
-                            &self.encoder_service.context,
-                            erasure_commitment,
-                            storage_root,
-                        )
-                        .map_err(|e| anyhow!(e))?;
+                        .verify(&self.encoder_params, erasure_commitment, storage_root)
+                        .map_err(|e| anyhow!(format!("{:?}", e)))?;
                 }
             }
             None => {
