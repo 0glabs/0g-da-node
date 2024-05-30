@@ -286,3 +286,40 @@ async fn check_new_quorums(chain_state: Arc<ChainState>, epoch: u64) -> Result<(
     chain_state.fetch_quorum_if_missing(epoch).await?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::str::FromStr;
+
+    #[test]
+    fn serialize_g1_point_test() {
+        let point = G1Affine::new(
+            num_bigint::BigUint::from_str(
+                "6724829742155202114588703109163916832474668614509013446003558283321393615541",
+            )
+            .unwrap()
+            .into(),
+            num_bigint::BigUint::from_str(
+                "18651128649493315670638266822842049221420897547844513786443506962173845494390",
+            )
+            .unwrap()
+            .into(),
+        );
+        let serialized = serialize_g1_point(point);
+        assert_eq!(
+            serialized.x,
+            U256::from_dec_str(
+                "6724829742155202114588703109163916832474668614509013446003558283321393615541"
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            serialized.y,
+            U256::from_dec_str(
+                "18651128649493315670638266822842049221420897547844513786443506962173845494390"
+            )
+            .unwrap()
+        );
+    }
+}

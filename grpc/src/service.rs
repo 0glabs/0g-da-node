@@ -154,21 +154,37 @@ impl SignerService {
             .await?;
         match maybe_assigned_slices {
             Some(AssignedSlices(assigned_slices)) => {
-                if assigned_slices.len() != encoded_slices.len() {
-                    bail!(anyhow!("assigned slices and given slices length not match"));
-                }
-                for (expected_index, slice) in assigned_slices.iter().zip(encoded_slices.iter()) {
-                    if *expected_index != slice.index as u64 {
-                        bail!(anyhow!("assigned slices and given slices index mismatch"));
-                    }
-                    slice
-                        .verify(&self.encoder_params, erasure_commitment, storage_root)
-                        .map_err(|e| anyhow!(format!("{:?}", e)))?;
-                }
+                self.verify_assigned_slices(
+                    storage_root,
+                    erasure_commitment,
+                    assigned_slices,
+                    encoded_slices,
+                )?;
             }
             None => {
                 bail!(anyhow!("quorum not found"));
             }
+        }
+        Ok(())
+    }
+
+    fn verify_assigned_slices(
+        &self,
+        storage_root: &[u8; 32],
+        erasure_commitment: &G1Projective,
+        assigned_slices: Vec<u64>,
+        encoded_slices: &Vec<EncodedSlice>,
+    ) -> anyhow::Result<()> {
+        if assigned_slices.len() != encoded_slices.len() {
+            bail!(anyhow!("assigned slices and given slices length not match"));
+        }
+        for (expected_index, slice) in assigned_slices.iter().zip(encoded_slices.iter()) {
+            if *expected_index != slice.index as u64 {
+                bail!(anyhow!("assigned slices and given slices index mismatch"));
+            }
+            slice
+                .verify(&self.encoder_params, erasure_commitment, storage_root)
+                .map_err(|e| anyhow!(format!("{:?}", e)))?;
         }
         Ok(())
     }

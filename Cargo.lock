@@ -622,6 +622,8 @@ dependencies = [
  "ark-serialize",
  "contract-interface",
  "ethers",
+ "hex",
+ "num-bigint",
  "storage",
  "tokio",
  "tracing",
