@@ -11,6 +11,7 @@ use chain_state::ChainState;
 use ethers::abi::{self, Token};
 use ethers::types::U256;
 use ethers::utils::keccak256;
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use std::sync::Arc;
 use std::time::Instant;
 use storage::blob_status_db::{BlobStatus, BlobStatusDB};
@@ -26,11 +27,15 @@ pub mod signer {
     tonic::include_proto!("signer");
 }
 
+const DEFAULT_MAX_ONGOING_SIGN_REQUEST: u64 = 10;
+
 pub struct SignerService {
     db: Arc<RwLock<Storage>>,
     chain_state: Arc<ChainState>,
     signer_private_key: Fr,
     encoder_params: ZgEncoderParams,
+    max_ongoing_sign_request: u64,
+    ongoing_sign_request_cnt: Arc<RwLock<u64>>,
 }
 
 impl SignerService {
@@ -39,19 +44,34 @@ impl SignerService {
         chain_state: Arc<ChainState>,
         signer_private_key: Fr,
         encoder_params_dir: String,
+        max_ongoing_sign_request: Option<u64>,
     ) -> Self {
         Self {
             db,
             chain_state,
             signer_private_key,
             encoder_params: ZgEncoderParams::from_dir_mont(encoder_params_dir, true),
+            max_ongoing_sign_request: max_ongoing_sign_request
+                .unwrap_or(DEFAULT_MAX_ONGOING_SIGN_REQUEST),
+            ongoing_sign_request_cnt: Arc::new(RwLock::new(0)),
         }
     }
-}
 
-#[tonic::async_trait]
-impl Signer for SignerService {
-    async fn batch_sign(
+    async fn on_incoming_batch_sign(&self) -> Result<(), Status> {
+        let mut cnt = self.ongoing_sign_request_cnt.write().await;
+        if *cnt > self.max_ongoing_sign_request {
+            return Err(Status::new(Code::ResourceExhausted, "request pool is full"));
+        }
+        *cnt += 1;
+        Ok(())
+    }
+
+    async fn on_complete_batch_sign(&self) {
+        let mut cnt = self.ongoing_sign_request_cnt.write().await;
+        *cnt -= 1;
+    }
+
+    async fn batch_sign_inner(
         &self,
         request: Request<BatchSignRequest>,
     ) -> Result<Response<BatchSignReply>, Status> {
@@ -98,8 +118,8 @@ impl Signer for SignerService {
                         self.verify_encoded_slices(
                             req.epoch,
                             req.quorum_id,
-                            &storage_root,
-                            &erasure_commitment,
+                            storage_root,
+                            erasure_commitment,
                             &encoded_slices,
                         )
                         .await
@@ -107,10 +127,10 @@ impl Signer for SignerService {
                             Status::new(Code::Internal, format!("verification failed: {:?}", e))
                         })?;
                         let hash = blob_verified_hash(
-                            &storage_root,
+                            storage_root,
                             req.epoch,
                             req.quorum_id,
-                            &erasure_commitment,
+                            erasure_commitment,
                         );
                         let signature = (hash * self.signer_private_key).into_affine();
                         let mut value = Vec::new();
@@ -130,13 +150,26 @@ impl Signer for SignerService {
     }
 }
 
+#[tonic::async_trait]
+impl Signer for SignerService {
+    async fn batch_sign(
+        &self,
+        request: Request<BatchSignRequest>,
+    ) -> Result<Response<BatchSignReply>, Status> {
+        self.on_incoming_batch_sign().await?;
+        let reply = self.batch_sign_inner(request).await;
+        self.on_complete_batch_sign().await;
+        reply
+    }
+}
+
 impl SignerService {
     async fn verify_encoded_slices(
         &self,
         epoch: u64,
         quorum_id: u64,
-        storage_root: &[u8; 32],
-        erasure_commitment: &G1Projective,
+        storage_root: [u8; 32],
+        erasure_commitment: G1Projective,
         encoded_slices: &Vec<EncodedSlice>,
     ) -> anyhow::Result<()> {
         // in case quorum info is missing
@@ -170,23 +203,26 @@ impl SignerService {
 
     fn verify_assigned_slices(
         &self,
-        storage_root: &[u8; 32],
-        erasure_commitment: &G1Projective,
+        storage_root: [u8; 32],
+        erasure_commitment: G1Projective,
         assigned_slices: Vec<u64>,
         encoded_slices: &Vec<EncodedSlice>,
     ) -> anyhow::Result<()> {
         if assigned_slices.len() != encoded_slices.len() {
             bail!(anyhow!("assigned slices and given slices length not match"));
         }
-        for (expected_index, slice) in assigned_slices.iter().zip(encoded_slices.iter()) {
-            if *expected_index != slice.index as u64 {
-                bail!(anyhow!("assigned slices and given slices index mismatch"));
-            }
-            slice
-                .verify(&self.encoder_params, erasure_commitment, storage_root)
-                .map_err(|e| anyhow!(format!("{:?}", e)))?;
-        }
-        Ok(())
+        assigned_slices
+            .par_iter()
+            .zip(encoded_slices)
+            .map(|(expected_index, slice)| {
+                if *expected_index != slice.index as u64 {
+                    bail!(anyhow!("assigned slices and given slices index mismatch"));
+                }
+                slice
+                    .verify(&self.encoder_params, &erasure_commitment, &storage_root)
+                    .map_err(|e| anyhow!(format!("{:?}", e)))
+            })
+            .collect()
     }
 }
 
@@ -197,10 +233,10 @@ fn u256_to_u8_array(x: U256) -> Vec<u8> {
 }
 
 pub fn blob_verified_hash(
-    data_root: &[u8; 32],
+    data_root: [u8; 32],
     epoch: u64,
     quorum_id: u64,
-    erasure_commitment: &G1Projective,
+    erasure_commitment: G1Projective,
 ) -> G1Affine {
     let g1_point = serialize_g1_point(erasure_commitment.into_affine());
     let hash = keccak256(
@@ -232,13 +268,13 @@ mod tests {
     fn blob_verified_hash_test() {
         let a = g1::G1Affine::generator() * Fr::from(1);
         let hash = blob_verified_hash(
-            &hex_to_bytes("1111111111111111111111111111111111111111111111111111111111111111")
+            hex_to_bytes("1111111111111111111111111111111111111111111111111111111111111111")
                 .unwrap()
                 .try_into()
                 .unwrap(),
             1,
             2,
-            &G1Projective::new(Fp::from(1), Fp::from(2), Fp::from(1)),
+            G1Projective::new(Fp::from(1), Fp::from(2), Fp::from(1)),
         );
         assert_eq!(
             hash,

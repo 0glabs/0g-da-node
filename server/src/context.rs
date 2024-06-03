@@ -30,6 +30,8 @@ pub struct Context {
     pub log_level: String,
     pub encoder_params_dir: String,
     pub grpc_listen_address: String,
+    pub max_ongoing_sign_request: Option<u64>,
+    pub max_verify_threads: Option<usize>,
     pub socket_address: String,
     pub eth_rpc_url: String,
     pub start_block_number: u64,
@@ -74,6 +76,14 @@ impl Context {
             Ok(Self {
                 log_level: settings.get_string("log_level")?,
                 grpc_listen_address: settings.get_string("grpc_listen_address")?,
+                max_ongoing_sign_request: settings
+                    .get_int("max_ongoing_sign_request")
+                    .ok()
+                    .map(|x| x as u64),
+                max_verify_threads: settings
+                    .get_int("max_verify_threads")
+                    .ok()
+                    .map(|x| x as usize),
                 socket_address: settings.get_string("socket_address")?,
                 eth_rpc_url,
                 start_block_number: settings.get_int("start_block_number")? as u64,

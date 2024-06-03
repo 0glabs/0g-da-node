@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = { version = "1.0.71", features = ["backtrace"] }
+async-trait = "0.1.71"
 prost = "0.12.3"
 tonic = "0.11.0"
 tracing = "0.1.40"
@@ -24,6 +25,7 @@ tokio = { version = "1.28.1", features = ["full"] }
 ethers = { version = "2.0.4", features = ["ws", "rustls", "openssl"] }
 num-bigint = { version = "0.4", default-features = false }
 hex = "0.4"
+rayon = "1.10.0"
 
 [build-dependencies]
 tonic-build = { version="0.11.0", features = ["prost"] }

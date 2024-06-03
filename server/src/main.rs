@@ -6,32 +6,32 @@ mod context;
 use std::{error::Error, net::SocketAddr, str::FromStr, sync::Arc};
 
 use anyhow::{anyhow, Result};
-use ark_bn254::Fr;
+
 use chain_state::{
     da_handler::start_da_monitor, signers_handler::start_epoch_registration, ChainState,
 };
 use grpc::run_server;
-use storage::Storage;
-use tokio::{signal, sync::RwLock};
+
+use tokio::signal;
 use tracing::Level;
 
 use crate::context::Context;
 
-async fn start_grpc_server(
-    db: Arc<RwLock<Storage>>,
-    chain_state: Arc<ChainState>,
-    signer_private_key: Fr,
-    server_addr: String,
-    encoder_params_dir: String,
-) -> Result<()> {
-    info!("starting grpc server at {:?}", server_addr);
+async fn start_grpc_server(chain_state: Arc<ChainState>, ctx: &Context) -> Result<()> {
+    let db = ctx.db.clone();
+    let signer_private_key = ctx.signer_private_key;
+    let grpc_listen_address = ctx.grpc_listen_address.clone();
+    let encoder_params_dir = ctx.encoder_params_dir.clone();
+    let max_ongoing_sign_request = ctx.max_ongoing_sign_request;
+    info!("starting grpc server at {:?}", grpc_listen_address);
     tokio::spawn(async move {
         run_server(
             db,
             chain_state,
             signer_private_key,
-            SocketAddr::from_str(&server_addr).unwrap(),
+            SocketAddr::from_str(&grpc_listen_address).unwrap(),
             encoder_params_dir,
+            max_ongoing_sign_request,
         )
         .await
         .map_err(|e| anyhow!(e.to_string()))
@@ -60,14 +60,7 @@ async fn setup_chain_state(ctx: &Context) -> Result<Arc<ChainState>> {
 
 async fn start_server(ctx: Context) -> Result<()> {
     let chain_state = setup_chain_state(&ctx).await?;
-    start_grpc_server(
-        ctx.db.clone(),
-        chain_state.clone(),
-        ctx.signer_private_key,
-        ctx.grpc_listen_address.clone(),
-        ctx.encoder_params_dir.clone(),
-    )
-    .await?;
+    start_grpc_server(chain_state.clone(), &ctx).await?;
     Ok(())
 }
 
@@ -78,6 +71,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // CLI, config
     let ctx = Context::new().await?;
+
+    // rayon
+    if let Some(num_threads) = ctx.max_verify_threads {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(num_threads)
+            .build_global()
+            .unwrap();
+    }
 
     // tracing
     tracing_subscriber::fmt()
