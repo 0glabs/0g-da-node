@@ -73,24 +73,6 @@ dependencies = [
 [[package]]
 name = "amt"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix#95e7d9a368a7bb26e5c689d5e8473d434935365a"
-dependencies = [
- "ark-bn254",
- "ark-ec",
- "ark-ff",
- "ark-poly",
- "ark-serialize",
- "ark-std",
- "base64 0.22.1",
- "error-chain",
- "once_cell",
- "rand",
- "rayon",
-]
-
-[[package]]
-name = "amt"
-version = "0.1.0"
 source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d#289709d17c88a82d46823d99f29db7be287c4e22"
 dependencies = [
  "anyhow",
@@ -1730,7 +1712,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "utils",
- "zg-encoder 0.1.0 (git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d)",
+ "zg-encoder",
 ]
 
 [[package]]
@@ -3764,7 +3746,7 @@ dependencies = [
  "serde_json",
  "tracing",
  "tracing-subscriber",
- "zg-encoder 0.1.0 (git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix)",
+ "zg-encoder",
 ]
 
 [[package]]
@@ -4868,31 +4850,9 @@ dependencies = [
 [[package]]
 name = "zg-encoder"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix#95e7d9a368a7bb26e5c689d5e8473d434935365a"
-dependencies = [
- "amt 0.1.0 (git+https://github.com/0glabs/0g-da-encoder.git?branch=signer-fix)",
- "ark-bn254",
- "ark-ec",
- "ark-ff",
- "ark-poly",
- "ark-serialize",
- "ark-std",
- "ethereum-types",
- "hash-db",
- "keccak-hash",
- "keccak-hasher",
- "once_cell",
- "rayon",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "zg-encoder"
-version = "0.1.0"
 source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d#289709d17c88a82d46823d99f29db7be287c4e22"
 dependencies = [
- "amt 0.1.0 (git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d)",
+ "amt",
  "ark-bn254",
  "ark-ec",
  "ark-ff",

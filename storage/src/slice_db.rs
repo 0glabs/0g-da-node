@@ -4,7 +4,7 @@ use super::Storage;
 use anyhow::Result;
 use ark_serialize::CanonicalSerialize;
 use async_trait::async_trait;
-use zg_encoder::amt_merkle::slice::EncodedSliceAKM;
+use zg_encoder::EncodedSlice;
 
 struct SliceIndex {
     pub epoch: u64,
@@ -20,7 +20,7 @@ pub trait SliceDB {
         epoch: u64,
         quorum_id: u64,
         storage_root: [u8; 32],
-        slices: Vec<EncodedSliceAKM>,
+        slices: Vec<EncodedSlice>,
     ) -> Result<()>;
 }
 
@@ -42,7 +42,7 @@ impl SliceDB for Storage {
         epoch: u64,
         quorum_id: u64,
         storage_root: [u8; 32],
-        slices: Vec<EncodedSliceAKM>,
+        slices: Vec<EncodedSlice>,
     ) -> Result<()> {
         let mut tx = self.db.transaction();
         for slice in slices.into_iter() {

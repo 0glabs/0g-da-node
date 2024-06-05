@@ -16,6 +16,7 @@ use std::sync::Arc;
 use std::time::Instant;
 use storage::blob_status_db::{BlobStatus, BlobStatusDB};
 use storage::quorum_db::{AssignedSlices, QuorumDB};
+use storage::slice_db::SliceDB;
 use storage::Storage;
 use tokio::sync::RwLock;
 use tonic::metadata::KeyAndMutValueRef;
@@ -136,6 +137,15 @@ impl SignerService {
                         let mut value = Vec::new();
                         signature.serialize_uncompressed(&mut value);
                         reply.signatures.push(value);
+                        // write slices to db
+                        self.db
+                            .write()
+                            .await
+                            .put_slice(req.epoch, req.quorum_id, storage_root, encoded_slices)
+                            .await
+                            .map_err(|e| {
+                                Status::new(Code::Internal, format!("pub slice error: {:?}", e))
+                            })?;
                     }
                     BlobStatus::VERIFIED => {
                         return Err(Status::new(Code::Internal, "blob verified already"));
