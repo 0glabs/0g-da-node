@@ -12,3 +12,5 @@ start_block_number = 0
 
 signer_private_key = "1"
 validator_private_key = ""
+
+enable_das = "false"

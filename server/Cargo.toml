@@ -16,9 +16,15 @@ tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
 storage = { workspace = true }
 grpc = { workspace = true }
 chain-state = { workspace = true }
+chain-utils = { workspace = true }
 ark-ec = "0.4"
 ark-bn254 = "0.4"
 ark-ff = "0.4"
 ark-serialize = "0.4"
 num-bigint = { version = "0.4", default-features = false }
 rayon = "1.10.0"
+
+task_executor = { workspace = true }
+futures = "0.3.21"
+exit-future = "0.2.0"
+da-miner = { workspace = true }

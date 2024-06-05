@@ -1,14 +1,9 @@
-use std::str::FromStr;
-
-use std::time::Duration;
-
 use anyhow::{anyhow, bail, Result};
 
-use ethers::providers::{Http, HttpRateLimitRetryPolicy, RetryClient, RetryClientBuilder};
+use chain_utils::DefaultMiddleware;
 use ethers::types::H160;
 use ethers::{
-    prelude::SignerMiddleware,
-    providers::{Middleware, Provider},
+    providers::Middleware,
     signers::{LocalWallet, Signer},
     types::TransactionRequest,
 };
@@ -21,23 +16,15 @@ pub enum TransactionInfo {
 
 pub struct Transactor {
     signer: LocalWallet,
-    client: SignerMiddleware<Provider<RetryClient<Http>>, LocalWallet>,
+    client: DefaultMiddleware,
 }
 
 impl Transactor {
-    pub fn new(signer: LocalWallet, eth_rpc_url: &str) -> Result<Self> {
-        let provider = Provider::new(
-            RetryClientBuilder::default()
-                .rate_limit_retries(100)
-                .timeout_retries(100)
-                .initial_backoff(Duration::from_millis(500))
-                .build(
-                    Http::from_str(eth_rpc_url)?,
-                    Box::new(HttpRateLimitRetryPolicy),
-                ),
-        );
-        let client = SignerMiddleware::new(provider, signer.clone());
-        Ok(Self { client, signer })
+    pub fn new(middleware: DefaultMiddleware) -> Result<Self> {
+        Ok(Self {
+            signer: middleware.signer().clone(),
+            client: middleware,
+        })
     }
 
     pub fn signer_address(&self) -> H160 {

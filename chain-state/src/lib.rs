@@ -9,6 +9,7 @@ use std::{str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 
+use chain_utils::DA_SIGNER_ADDRESS;
 use contract_interface::{DAEntrance, DASigners};
 use ethers::{
     providers::{Http, HttpRateLimitRetryPolicy, Provider, RetryClient, RetryClientBuilder},
@@ -17,8 +18,6 @@ use ethers::{
 use storage::Storage;
 use tokio::sync::{Mutex, RwLock};
 use transactor::Transactor;
-
-pub const DA_SIGNER_ADDRESS: &str = "0x0000000000000000000000000000000000001000";
 
 pub struct ChainState {
     provider: Arc<Provider<RetryClient<Http>>>,

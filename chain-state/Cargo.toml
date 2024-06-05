@@ -12,6 +12,7 @@ tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
 tokio = { version = "1.28.1", features = ["full"] }
 contract-interface = { workspace = true }
+chain-utils = { workspace = true }
 utils = { workspace = true }
 storage = { workspace = true }
 ark-ec = "0.4"

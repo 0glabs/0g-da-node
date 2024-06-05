@@ -7,8 +7,9 @@ members = [
 	"storage",
 	"chain-state",
 	"utils",
-	"client"
-]
+	"client",
+	"da-miner",
+	"chain-utils"]
 
 [workspace.dependencies]
 grpc = { path = "./grpc" } 
@@ -18,8 +19,12 @@ chain-state = { path = "./chain-state" }
 storage = { path = "./storage" }
 utils = { path = "./utils" }
 client = { paht = "./client" }
+chain-utils = { path = "./chain-utils"}
+da-miner = { path = "./da-miner" }
 
-zg-encoder = { git = "https://github.com/0glabs/0g-da-encoder.git", rev = "289709d" }
+zg-encoder = { git = "https://github.com/0glabs/0g-da-encoder.git", rev = "f66892dbaa2d2249e69aed1129cad93ab11a7fbe" }
+task_executor = { git = "https://github.com/0glabs/0g-storage-node.git", rev = "ef82f643932ad0a2ec28acce47913df187afb77d" }
+
 
 [profile.release]
 panic = 'abort'
