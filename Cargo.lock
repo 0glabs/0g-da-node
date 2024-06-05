@@ -73,7 +73,7 @@ dependencies = [
 [[package]]
 name = "amt"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d#289709d17c88a82d46823d99f29db7be287c4e22"
+source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=f66892dbaa2d2249e69aed1129cad93ab11a7fbe#f66892dbaa2d2249e69aed1129cad93ab11a7fbe"
 dependencies = [
  "anyhow",
  "ark-bn254",
@@ -92,9 +92,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.83"
+version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25bdb32cbbdce2b519a9cd7df3a678443100e265d5e25ca763b7572a5104f5f3"
+checksum = "b3d1d046238990b9cf5bcde22a3fb3584ee5cf65fb2765f454ed428c7a0063da"
 dependencies = [
  "backtrace",
 ]
@@ -394,6 +394,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
+name = "bcs"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85b6598a2f5d564fb7855dc6b06fd1c38cff5a72bd8b863a4d021938497b440a"
+dependencies = [
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "bech32"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -602,6 +612,7 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-serialize",
+ "chain-utils",
  "contract-interface",
  "ethers",
  "hex",
@@ -611,6 +622,15 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "utils",
+]
+
+[[package]]
+name = "chain-utils"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "config",
+ "ethers",
 ]
 
 [[package]]
@@ -634,9 +654,9 @@ dependencies = [
 
 [[package]]
 name = "clang-sys"
-version = "1.7.0"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67523a3b4be3ce1989d607a828d036249522dd9c1c8de7f4dd2dae43a37369d1"
+checksum = "0b023947811758c97c59bf9d1c188fd619ad4718dcaa767947df1cadb14f39f4"
 dependencies = [
  "glob",
  "libc",
@@ -879,6 +899,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0369ee1ad671834580515889b80f2ea915f23b8be8d0daa4bbaf2ac5c7590835"
 dependencies = [
  "cipher",
+]
+
+[[package]]
+name = "da-miner"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chain-utils",
+ "config",
+ "contract-interface",
+ "ethers",
+ "once_cell",
+ "storage",
+ "task_executor",
+ "tiny-keccak",
+ "tokio",
+ "tracing",
+ "zg-encoder",
 ]
 
 [[package]]
@@ -1414,6 +1452,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "exit-future"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e43f2f1833d64e33f15592464d6fdd70f349dda7b1a53088eb83cd94014008c5"
+dependencies = [
+ "futures",
+]
+
+[[package]]
 name = "eyre"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1789,12 +1836,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
 
 [[package]]
-name = "heck"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
-
-[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2047,15 +2088,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2272,6 +2304,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "lighthouse_metrics"
+version = "0.2.0"
+source = "git+https://github.com/0glabs/0g-storage-node.git?rev=ef82f643932ad0a2ec28acce47913df187afb77d#ef82f643932ad0a2ec28acce47913df187afb77d"
+dependencies = [
+ "lazy_static",
+ "prometheus",
+]
+
+[[package]]
 name = "linked-hash-map"
 version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2370,11 +2411,10 @@ checksum = "defc4c55412d89136f966bbb339008b474350e5e6e78d2714439c386b3137a03"
 
 [[package]]
 name = "native-tls"
-version = "0.2.11"
+version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07226173c32f2926027b63cce4bcd8076c3552846cbe7925f3aaffeac0a3b92e"
+checksum = "a8614eb2c83d59d1c8cc974dd3f920198647674a0a035e1af1fa58707e317466"
 dependencies = [
- "lazy_static",
  "libc",
  "log",
  "openssl",
@@ -2936,6 +2976,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "prometheus"
+version = "0.13.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d33c28a30771f7f96db69893f78b857f7450d7e0237e9c8fc6427a81bae7ed1"
+dependencies = [
+ "cfg-if",
+ "fnv",
+ "lazy_static",
+ "memchr",
+ "parking_lot",
+ "protobuf",
+ "thiserror",
+]
+
+[[package]]
 name = "proptest"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2953,9 +3008,9 @@ dependencies = [
 
 [[package]]
 name = "prost"
-version = "0.12.4"
+version = "0.12.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0f5d036824e4761737860779c906171497f6d55681139d8312388f8fe398922"
+checksum = "deb1435c188b76130da55f17a466d252ff7b1418b2ad3e037d127b94e3411f29"
 dependencies = [
  "bytes",
  "prost-derive",
@@ -2963,13 +3018,13 @@ dependencies = [
 
 [[package]]
 name = "prost-build"
-version = "0.12.4"
+version = "0.12.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80b776a1b2dc779f5ee0641f8ade0125bc1298dd41a9a0c16d8bd57b42d222b1"
+checksum = "22505a5c94da8e3b7c2996394d1c933236c4d743e81a410bcca4e6989fc066a4"
 dependencies = [
  "bytes",
- "heck 0.5.0",
- "itertools 0.12.1",
+ "heck",
+ "itertools 0.11.0",
  "log",
  "multimap",
  "once_cell",
@@ -2984,12 +3039,12 @@ dependencies = [
 
 [[package]]
 name = "prost-derive"
-version = "0.12.5"
+version = "0.12.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9554e3ab233f0a932403704f1a1d08c30d5ccd931adfdfa1e8b5a19b52c1d55a"
+checksum = "81bddcdb20abf9501610992b6759a4c888aef7d1a7247ef75e2404275ac24af1"
 dependencies = [
  "anyhow",
- "itertools 0.12.1",
+ "itertools 0.11.0",
  "proc-macro2",
  "quote",
  "syn 2.0.63",
@@ -2997,12 +3052,18 @@ dependencies = [
 
 [[package]]
 name = "prost-types"
-version = "0.12.4"
+version = "0.12.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3235c33eb02c1f1e212abdbe34c78b264b038fb58ca612664343271e36e55ffe"
+checksum = "9091c90b0a32608e984ff2fa4091273cbdd755d54935c51d520887f4a1dbd5b0"
 dependencies = [
  "prost",
 ]
+
+[[package]]
+name = "protobuf"
+version = "2.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "106dd99e98437432fed6519dedecfade6a06a73bb7b2a1e019fdd2bee5778d94"
 
 [[package]]
 name = "quote"
@@ -3570,13 +3631,18 @@ dependencies = [
  "ark-ff",
  "ark-serialize",
  "chain-state",
+ "chain-utils",
  "clap",
  "config",
+ "da-miner",
  "ethers",
+ "exit-future",
+ "futures",
  "grpc",
  "num-bigint",
  "rayon",
  "storage",
+ "task_executor",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -3740,7 +3806,9 @@ dependencies = [
  "anyhow",
  "ark-serialize",
  "async-trait",
+ "bcs",
  "bincode",
+ "kvdb",
  "kvdb-rocksdb",
  "serde",
  "serde_json",
@@ -3783,7 +3851,7 @@ version = "0.26.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6cf59daf282c0a494ba14fd21610a0325f9f90ec9d1231dea26bcb1d696c946"
 dependencies = [
- "heck 0.4.1",
+ "heck",
  "proc-macro2",
  "quote",
  "rustversion",
@@ -3870,6 +3938,19 @@ name = "tap"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
+
+[[package]]
+name = "task_executor"
+version = "0.1.0"
+source = "git+https://github.com/0glabs/0g-storage-node.git?rev=ef82f643932ad0a2ec28acce47913df187afb77d#ef82f643932ad0a2ec28acce47913df187afb77d"
+dependencies = [
+ "exit-future",
+ "futures",
+ "lazy_static",
+ "lighthouse_metrics",
+ "tokio",
+ "tracing",
+]
 
 [[package]]
 name = "tempfile"
@@ -4850,7 +4931,7 @@ dependencies = [
 [[package]]
 name = "zg-encoder"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=289709d#289709d17c88a82d46823d99f29db7be287c4e22"
+source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=f66892dbaa2d2249e69aed1129cad93ab11a7fbe#f66892dbaa2d2249e69aed1129cad93ab11a7fbe"
 dependencies = [
  "amt",
  "ark-bn254",

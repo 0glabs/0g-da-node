@@ -1,0 +1,166 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IDASample",
+  "sourceName": "contracts/interface/IDASample.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "beneficiary",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "sampleHeight",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "quorumId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "dataRoot",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "quality",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "lineIndex",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "sublineIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "DAReward",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "sampleTask",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "sampleHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "quality",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint64",
+              "name": "sampleHeight",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "numSubmissions",
+              "type": "uint64"
+            }
+          ],
+          "internalType": "struct SampleTask",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "sampleHeight",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "epoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "quorumId",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint32",
+              "name": "lineIndex",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "sublineIndex",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "quality",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "dataRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32[3]",
+              "name": "blobRoots",
+              "type": "bytes32[3]"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "proof",
+              "type": "bytes32[]"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct SampleResponse",
+          "name": "rep",
+          "type": "tuple"
+        }
+      ],
+      "name": "submitSamplingResponse",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
