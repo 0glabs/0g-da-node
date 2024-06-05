@@ -2,7 +2,7 @@
 
 use crate::service::signer::signer_server::{Signer, SignerServer};
 use crate::service::signer::{BatchSignReply, BatchSignRequest};
-use anyhow::{anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 use ark_bn254::{Fr, G1Affine, G1Projective};
 use ark_ec::CurveGroup;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -86,7 +86,7 @@ impl SignerService {
                 .try_into()
                 .map_err(|_| Status::new(Code::InvalidArgument, "storage root"))?;
             let erasure_commitment =
-                G1Projective::deserialize_uncompressed(&*req.erasure_commitment).map_err(|e| {
+                decode_erasure_commitment(&*req.erasure_commitment).map_err(|e| {
                     Status::new(
                         Code::InvalidArgument,
                         format!("failed to deserialize erasure commitment: {:?}", e),
@@ -230,6 +230,22 @@ fn u256_to_u8_array(x: U256) -> Vec<u8> {
     let mut bytes = [0; 32];
     x.to_big_endian(&mut bytes);
     bytes.to_vec()
+}
+
+fn decode_erasure_commitment(mut raw_commitment: &[u8]) -> Result<G1Projective> {
+    use ark_bn254::Fq;
+    use ark_ec::AffineRepr;
+
+    let x = Fq::deserialize_uncompressed(&mut raw_commitment)?;
+    let y = Fq::deserialize_uncompressed(&mut raw_commitment)?;
+    let maybe_commitment = G1Affine::new_unchecked(x, y);
+    if !maybe_commitment.is_on_curve()
+        || !maybe_commitment.is_in_correct_subgroup_assuming_on_curve()
+    {
+        bail!("Commitment is not in the EC group");
+    }
+
+    Ok(maybe_commitment.into_group())
 }
 
 pub fn blob_verified_hash(
