@@ -4,3 +4,4 @@ target
 .vscode
 crates
 run
+params
