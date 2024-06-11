@@ -7,5 +7,4 @@ edition = "2021"
 
 [dependencies]
 ethers = "2.0.4"
-config = "0.13.4"
 anyhow = { version = "1.0.71", features = ["backtrace"] }

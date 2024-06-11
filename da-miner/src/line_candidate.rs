@@ -121,20 +121,18 @@ impl LineCandidate {
                 )
             })?;
 
-        let encoded_slice = if let Some(x) = maybe_slice {
+        let light_slice = if let Some(x) = maybe_slice {
             x
         } else {
             warn!(target : "Stage 2 Miner", index = ?self.index, "Encoded slice doesn't exist");
             return Ok(vec![]);
         };
 
-        let merkle = encoded_slice.merkle();
-
         let answer: Vec<_> = line_hits
             .into_iter()
             .map(|hit| {
                 let mut proof = hit.proof.clone();
-                proof.extend(&merkle.proof);
+                proof.extend(&light_slice.merkle_proof);
 
                 SampleResponse {
                     epoch,
@@ -144,7 +142,7 @@ impl LineCandidate {
                     line_index: index as u32,
                     subline_index: hit.subline_index as u32,
                     data: serialize_line(&hit.data).into(),
-                    blob_roots: merkle.root,
+                    blob_roots: light_slice.merkle_root,
                     proof,
                     sample_height: self.task.height,
                 }
