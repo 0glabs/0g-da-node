@@ -7,7 +7,7 @@ use anyhow::{bail, Result};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use async_trait::async_trait;
 use kvdb::KeyValueDB;
-use zg_encoder::EncodedSlice;
+use zg_encoder::{EncodedSlice, LightEncodedSlice};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct SliceIndex {
@@ -26,10 +26,18 @@ pub struct BlobInfo {
 
 const BLOB_PREFIX: u8 = 0;
 const SLICE_PREFIX: u8 = 1;
+const DATA_PREFIX: u8 = 2;
 
 impl SliceIndex {
     fn to_slice_key(&self) -> Vec<u8> {
-        once(SLICE_PREFIX)
+        self.to_key_with_prefix(SLICE_PREFIX)
+    }
+    fn to_data_key(&self) -> Vec<u8> {
+        self.to_key_with_prefix(DATA_PREFIX)
+    }
+
+    fn to_key_with_prefix(&self, prefix: u8) -> Vec<u8> {
+        once(prefix)
             .chain(self.epoch.to_be_bytes())
             .chain(self.quorum_id.to_be_bytes())
             .chain(self.storage_root)
@@ -54,7 +62,7 @@ pub trait SliceDB {
         quorum_id: u64,
         storage_root: [u8; 32],
         index: usize,
-    ) -> Result<Option<EncodedSlice>>;
+    ) -> Result<Option<LightEncodedSlice>>;
 
     async fn put_slice(
         &self,
@@ -76,10 +84,20 @@ impl SliceDB for Storage {
         storage_root: [u8; 32],
         index: usize,
     ) -> Result<Option<Vec<[u8; 32]>>> {
-        let encoded_slice = self
-            .get_slice(epoch, quorum_id, storage_root, index)
-            .await?;
-        Ok(encoded_slice.map(|s| s.merkle().row.clone()))
+        let index = SliceIndex {
+            epoch,
+            quorum_id,
+            storage_root,
+            index: index as u64,
+        };
+        let raw_slice = if let Some(slice) = self.db.get(COL_SLICE, &index.to_data_key())? {
+            slice
+        } else {
+            return Ok(None);
+        };
+        Ok(CanonicalDeserialize::deserialize_uncompressed_unchecked(
+            &*raw_slice,
+        )?)
     }
 
     async fn get_slice(
@@ -88,7 +106,7 @@ impl SliceDB for Storage {
         quorum_id: u64,
         storage_root: [u8; 32],
         index: usize,
-    ) -> Result<Option<EncodedSlice>> {
+    ) -> Result<Option<LightEncodedSlice>> {
         let index = SliceIndex {
             epoch,
             quorum_id,
@@ -100,7 +118,17 @@ impl SliceDB for Storage {
         } else {
             return Ok(None);
         };
-        let slice = CanonicalDeserialize::deserialize_uncompressed_unchecked(&*raw_slice)?;
+        let check = if cfg!(test) {
+            ark_serialize::Validate::Yes
+        } else {
+            ark_serialize::Validate::No
+        };
+        // Note: Slice is stored in compressed form
+        let slice = LightEncodedSlice::deserialize_with_mode(
+            &*raw_slice,
+            ark_serialize::Compress::Yes,
+            check,
+        )?;
         Ok(Some(slice))
     }
 
@@ -130,10 +158,17 @@ impl SliceDB for Storage {
                 storage_root,
                 index: slice.index as u64,
             };
+            let data = slice.merkle_row();
+            let light_slice = slice.into_light_slice();
 
             let mut value: Vec<u8> = Vec::new();
-            slice.serialize_uncompressed(&mut value).unwrap();
+            // Note: Slice is stored in compressed form
+            light_slice.serialize_compressed(&mut value).unwrap();
             tx.put(COL_SLICE, &index.to_slice_key(), &value);
+
+            let mut value: Vec<u8> = Vec::new();
+            data.serialize_uncompressed(&mut value).unwrap();
+            tx.put(COL_SLICE, &index.to_data_key(), &value);
         }
 
         self.db.write(tx)?;

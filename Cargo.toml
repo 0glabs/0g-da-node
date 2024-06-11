@@ -22,7 +22,8 @@ client = { paht = "./client" }
 chain-utils = { path = "./chain-utils"}
 da-miner = { path = "./da-miner" }
 
-zg-encoder = { git = "https://github.com/0glabs/0g-da-encoder.git", rev = "f66892dbaa2d2249e69aed1129cad93ab11a7fbe" }
+zg-encoder = { git = "https://github.com/0glabs/0g-da-encoder.git", rev = "6193c635b00d19ea2dc9a0192499a5114df41a92", features = ["parallel"]}
+# zg-encoder = { path = "../0g-da-encoder/crates/encoder", features = ["parallel"]}
 task_executor = { git = "https://github.com/0glabs/0g-storage-node.git", rev = "ef82f643932ad0a2ec28acce47913df187afb77d" }
 
 
