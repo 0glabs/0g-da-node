@@ -5,3 +5,4 @@ target
 crates
 run
 params
+db
