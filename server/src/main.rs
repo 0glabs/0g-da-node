@@ -15,6 +15,7 @@ use chain_state::{
 use da_miner::DasMineService;
 use grpc::run_server;
 
+use runtime::Environment;
 use task_executor::TaskExecutor;
 use tracing::Level;
 
@@ -72,11 +73,10 @@ async fn start_server(ctx: &Context) -> Result<()> {
     Ok(())
 }
 
-async fn start_das_service(env: runtime::Environment, executor: TaskExecutor, ctx: &Context) {
+async fn start_das_service(executor: TaskExecutor, ctx: &Context) {
     if !ctx.config.enable_das {
         return;
     }
-
     DasMineService::spawn(
         executor,
         ctx.provider.clone(),
@@ -86,47 +86,52 @@ async fn start_das_service(env: runtime::Environment, executor: TaskExecutor, ct
     .await
     .unwrap();
     info!("DA sampling mine service started");
-    env.wait_shutdown_signal().await;
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+
+fn main() -> Result<(), Box<dyn Error>> {
     // enable backtraces
     std::env::set_var("RUST_BACKTRACE", "1");
 
+    let (environment, runtime, executor) = make_environment().unwrap();
+
+    let res = runtime.block_on(async {async_main(environment, executor).await});
+
+    if let Err(e) = res {
+        error!(reason =?e, "Service exit");
+    }
+
+    runtime.shutdown_timeout(std::time::Duration::from_secs(15));
+    info!("Stopped");
+
+
+    Ok(())
+}
+
+
+async fn async_main(environment: Environment, executor: TaskExecutor) -> Result<(), Box<dyn Error>> {
     // CLI, config
     let config = Config::from_cli_file().unwrap();
-    let ctx = Context::new(config).await.unwrap();
+
+    // tracing
+    tracing_subscriber::fmt()
+        .with_max_level(Level::from_str(&config.log_level)?)
+        .init();
+
+    let ctx = Context::new(config).await?;
 
     // rayon
     if let Some(num_threads) = ctx.config.max_verify_threads {
         rayon::ThreadPoolBuilder::new()
             .num_threads(num_threads)
-            .build_global()
-            .unwrap();
+            .build_global()?;
     }
 
-    // tracing
-    tracing_subscriber::fmt()
-        .with_max_level(Level::from_str(&ctx.config.log_level).unwrap())
-        .init();
+    let (_das_res, rpc_res) = tokio::join!(start_das_service(executor, &ctx), start_server(&ctx));
+    rpc_res?;
 
-    let (enviroment, executor) = make_environment().unwrap();
-    let das_service = start_das_service(enviroment, executor, &ctx);
-    let rpc_service = start_server(&ctx);
+    environment.wait_shutdown_signal().await;
 
-    tokio::select! {
-        res = rpc_service => {
-            if let Err(e) = res {
-                error!(error = ?e, "Signer service exit with error");
-                std::process::exit(1);
-            } else {
-                info!("Signer service exit");
-            }
-        },
-        _ = das_service, if ctx.config.enable_das => {
-            info!("Das service signal received, stopping..");
-        }
-    }
+    info!("Signal received, stopping..");
     Ok(())
 }

@@ -53,7 +53,7 @@ impl SignerService {
             db,
             chain_state,
             signer_private_key,
-            encoder_params: ZgSignerParams::from_dir(params_dir),
+            encoder_params: ZgSignerParams::from_dir_mont(params_dir),
             max_ongoing_sign_request: max_ongoing_sign_request
                 .unwrap_or(DEFAULT_MAX_ONGOING_SIGN_REQUEST),
             ongoing_sign_request_cnt: Arc::new(RwLock::new(0)),
