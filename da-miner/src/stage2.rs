@@ -74,7 +74,7 @@ impl DasStage2Miner {
     ) -> Result<(), String> {
         while let Some(candidate) = line_candidates.pop() {
             for sample_response in candidate.mine(db).await? {
-                if let Err(_) = self.submission_sender.send(sample_response) {
+                if self.submission_sender.send(sample_response).is_err() {
                     warn!(target : "Stage 2 Miner", "Submission channel closed.");
                     return Err("Submission channel closed".to_string());
                 }
