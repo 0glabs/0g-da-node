@@ -211,11 +211,11 @@ impl SignerService {
 
         let maybe_commitment = G1Affine::new_unchecked(x, y);
         if !maybe_commitment.is_on_curve()
-            || maybe_commitment.is_in_correct_subgroup_assuming_on_curve()
+            || !maybe_commitment.is_in_correct_subgroup_assuming_on_curve()
         {
             return Err(Status::new(
                 Code::InvalidArgument,
-                format!("Incorrect commitment: commitment is not in group"),
+                "Incorrect commitment: commitment is not in group".to_string(),
             ));
         }
 

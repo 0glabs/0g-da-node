@@ -80,6 +80,5 @@ impl Environment {
                 }
             }
         }
-        
     }
 }

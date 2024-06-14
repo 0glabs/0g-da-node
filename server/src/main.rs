@@ -88,14 +88,13 @@ async fn start_das_service(executor: TaskExecutor, ctx: &Context) {
     info!("DA sampling mine service started");
 }
 
-
 fn main() -> Result<(), Box<dyn Error>> {
     // enable backtraces
     std::env::set_var("RUST_BACKTRACE", "1");
 
     let (environment, runtime, executor) = make_environment().unwrap();
 
-    let res = runtime.block_on(async {async_main(environment, executor).await});
+    let res = runtime.block_on(async { async_main(environment, executor).await });
 
     if let Err(e) = res {
         error!(reason =?e, "Service exit");
@@ -104,12 +103,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     runtime.shutdown_timeout(std::time::Duration::from_secs(15));
     info!("Stopped");
 
-
     Ok(())
 }
 
-
-async fn async_main(environment: Environment, executor: TaskExecutor) -> Result<(), Box<dyn Error>> {
+async fn async_main(
+    environment: Environment,
+    executor: TaskExecutor,
+) -> Result<(), Box<dyn Error>> {
     // CLI, config
     let config = Config::from_cli_file().unwrap();
 
