@@ -13,7 +13,7 @@ use ethers::types::U256;
 use ethers::utils::keccak256;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use std::sync::Arc;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use storage::blob_status_db::{BlobStatus, BlobStatusDB};
 use storage::quorum_db::{AssignedSlices, QuorumDB};
 use storage::slice_db::SliceDB;
@@ -80,6 +80,7 @@ impl SignerService {
     ) -> Result<Response<BatchSignReply>, Status> {
         let remote_addr = request.remote_addr();
         let request_content = request.into_inner();
+        let ts = Instant::now();
 
         info!(?remote_addr, "Received request");
         let mut reply = BatchSignReply { signatures: vec![] };
@@ -133,6 +134,7 @@ impl SignerService {
                 .map_err(|e| Status::new(Code::Internal, format!("pub slice error: {:?}", e)))?;
         }
 
+        info!("responsed in {:?} ms", ts.elapsed().as_millis());
         Ok(Response::new(reply))
     }
 }
@@ -223,17 +225,24 @@ impl SignerService {
     }
 
     fn decode_encoded_slices(req: &SignRequest) -> Result<Vec<EncodedSlice>, Status> {
-        let mut encoded_slices = vec![];
-        for data in req.encoded_slice.iter() {
-            let encoded_slice =
+        let ts = Instant::now();
+        let encoded_slices: Vec<EncodedSlice> = req
+            .encoded_slice
+            .par_iter()
+            .map(|data| {
                 EncodedSlice::deserialize_uncompressed(&*data.to_vec()).map_err(|e| {
                     Status::new(
                         Code::InvalidArgument,
                         format!("failed to deserialize slice: {:?}", e),
                     )
-                })?;
-            encoded_slices.push(encoded_slice);
-        }
+                })
+            })
+            .collect::<Result<Vec<EncodedSlice>, Status>>()?;
+        info!(
+            "used {:?} ms to deserialize {:?} slices.",
+            ts.elapsed().as_millis(),
+            encoded_slices.len()
+        );
         Ok(encoded_slices)
     }
 
@@ -284,7 +293,8 @@ impl SignerService {
         if assigned_slices.len() != encoded_slices.len() {
             return Err(VerificationError::SliceMismatch);
         }
-        assigned_slices
+        let ts = Instant::now();
+        let res = assigned_slices
             .par_iter()
             .zip(encoded_slices)
             .map(|(expected_index, slice)| -> Result<(), VerificationError> {
@@ -294,7 +304,13 @@ impl SignerService {
                     Ok(slice.verify(&self.encoder_params, &erasure_commitment, &storage_root)?)
                 }
             })
-            .collect()
+            .collect();
+        info!(
+            "used {:?} ms to verify {:?} slices.",
+            ts.elapsed().as_millis(),
+            assigned_slices.len()
+        );
+        res
     }
 }
 
