@@ -18,6 +18,7 @@ use grpc::run_server;
 use runtime::Environment;
 use task_executor::TaskExecutor;
 use tracing::Level;
+use tracing_subscriber::EnvFilter;
 
 use crate::config::Config;
 use crate::context::Context;
@@ -81,6 +82,7 @@ async fn start_das_service(executor: TaskExecutor, ctx: &Context) {
         executor,
         ctx.provider.clone(),
         ctx.config.da_entrance_address,
+        ctx.config.das_test,
         ctx.db.clone(),
     )
     .await
@@ -88,14 +90,13 @@ async fn start_das_service(executor: TaskExecutor, ctx: &Context) {
     info!("DA sampling mine service started");
 }
 
-
 fn main() -> Result<(), Box<dyn Error>> {
     // enable backtraces
     std::env::set_var("RUST_BACKTRACE", "1");
 
     let (environment, runtime, executor) = make_environment().unwrap();
 
-    let res = runtime.block_on(async {async_main(environment, executor).await});
+    let res = runtime.block_on(async { async_main(environment, executor).await });
 
     if let Err(e) = res {
         error!(reason =?e, "Service exit");
@@ -104,18 +105,23 @@ fn main() -> Result<(), Box<dyn Error>> {
     runtime.shutdown_timeout(std::time::Duration::from_secs(15));
     info!("Stopped");
 
-
     Ok(())
 }
 
-
-async fn async_main(environment: Environment, executor: TaskExecutor) -> Result<(), Box<dyn Error>> {
+async fn async_main(
+    environment: Environment,
+    executor: TaskExecutor,
+) -> Result<(), Box<dyn Error>> {
     // CLI, config
     let config = Config::from_cli_file().unwrap();
 
     // tracing
+    
+    // make sure log level is valid string
+    let _ = Level::from_str(&config.log_level)?;
+    let filter = EnvFilter::try_new(format!("{},hyper=warn", config.log_level))?;
     tracing_subscriber::fmt()
-        .with_max_level(Level::from_str(&config.log_level)?)
+        .with_env_filter(filter)
         .init();
 
     let ctx = Context::new(config).await?;
@@ -128,7 +134,10 @@ async fn async_main(environment: Environment, executor: TaskExecutor) -> Result<
     }
 
     let (_das_res, rpc_res) = tokio::join!(start_das_service(executor, &ctx), start_server(&ctx));
-    rpc_res?;
+
+    if !ctx.config.das_test {
+        rpc_res?;
+    }
 
     environment.wait_shutdown_signal().await;
 

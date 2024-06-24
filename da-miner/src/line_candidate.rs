@@ -13,7 +13,7 @@ use crate::{
 pub struct LineCandidate {
     index: SliceIndex,
     task: SampleTask,
-    line_quality: U256,
+    pub line_quality: U256,
 }
 
 impl LineCandidate {
@@ -80,7 +80,7 @@ impl LineCandidate {
                 .map(|d| {
                     let height = DEPTH - d;
                     let idx = subline_index >> height;
-                    subline_merkle[d][idx ^ 1]
+                    subline_merkle[d - 1][idx ^ 1]
                 })
                 .collect();
 
@@ -124,7 +124,7 @@ impl LineCandidate {
         let light_slice = if let Some(x) = maybe_slice {
             x
         } else {
-            warn!(target : "Stage 2 Miner", index = ?self.index, "Encoded slice doesn't exist");
+            warn!(index = ?self.index, "Encoded slice doesn't exist");
             return Ok(vec![]);
         };
 

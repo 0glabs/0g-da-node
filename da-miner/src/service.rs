@@ -8,8 +8,7 @@ use task_executor::TaskExecutor;
 use tokio::sync::{broadcast, mpsc, RwLock};
 
 use crate::{
-    line_candidate::LineCandidate, stage1::DasStage1Miner, stage2::DasStage2Miner,
-    submitter::DasSubmitter, watcher::DasWatcher,
+    line_candidate::LineCandidate, mock_data::store_mock_data, stage1::DasStage1Miner, stage2::DasStage2Miner, submitter::DasSubmitter, watcher::DasWatcher
 };
 
 pub struct DasMineService;
@@ -19,9 +18,16 @@ impl DasMineService {
         executor: TaskExecutor,
         provider: DefaultMiddleware,
         da_address: Address,
+        das_test: bool,
         store: Arc<RwLock<Storage>>,
     ) -> Result<(), String> {
         info_span!("start_mine_service");
+
+        if das_test {
+            info!("Start store mock da data");
+            store_mock_data("./params", &*store.read().await).await;
+        }
+        
 
         let (on_chain_sender, on_chain_receiver) = broadcast::channel(1024);
 
@@ -34,6 +40,7 @@ impl DasMineService {
             provider.clone(),
             on_chain_sender,
             da_address,
+            das_test,
         )
         .await?;
 

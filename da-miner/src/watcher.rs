@@ -27,6 +27,7 @@ pub enum OnChainChangeMessage {
     ClosedSampleTask(H256),
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct OnChainStatus {
     current_epoch: u64,
     sample_hash: H256,
@@ -46,12 +47,17 @@ impl DasWatcher {
         provider: DefaultMiddleware,
         sender: broadcast::Sender<OnChainChangeMessage>,
         da_address: Address,
+        das_test: bool,
     ) -> Result<u64, String> {
         let da_contract = DASample::new(da_address, provider.clone());
-        let da_signer = DASigners::new(
-            Address::from_str(DA_SIGNER_ADDRESS).unwrap(),
-            provider.clone(),
-        );
+
+        let signer_address = if das_test {
+            da_address
+        } else {
+            Address::from_str(DA_SIGNER_ADDRESS).unwrap()
+        };
+        let da_signer = DASigners::new(signer_address, provider.clone());
+
         let epoch_number = da_signer
             .epoch_number()
             .call()
@@ -89,6 +95,7 @@ impl DasWatcher {
                     match self.fetch_on_chain_status().await {
                         Ok(status) => {
                             self.last_status = Some(status);
+                            trace!(?status, "Update on chain status");
                         }
                         Err(err) => {
                             warn!(error = ?err, "Cannot fetch on chain status");
@@ -128,7 +135,7 @@ impl DasWatcher {
                 .send(NewSampleTask(SampleTask {
                     hash: sample_hash,
                     quality: sample_context.quality,
-                    height: 0,
+                    height: sample_context.sample_height,
                 }))
                 .map_err(|e| format!("Broadcast error: {:?}", e))?;
         }

@@ -23,6 +23,7 @@ impl LineMetadata {
     }
 
     pub fn new_epoch(&mut self, epoch: u64) {
+        info!(epoch, "New epoch context to fetch");
         self.epoch_to_fetch.insert(epoch);
     }
 
@@ -49,6 +50,8 @@ impl LineMetadata {
             if self.data.contains_key(&next_epoch) {
                 continue;
             }
+
+            debug!(load_epoch = next_epoch, "Load metadata for epoch");
 
             let epoch_info = db
                 .get_epoch_info(next_epoch)
