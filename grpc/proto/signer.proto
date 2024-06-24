@@ -27,6 +27,7 @@ message RetrieveRequest {
   uint64 epoch = 1; // epoch number of DASigners internal contract
   uint64 quorum_id = 2; // quorum id of DASigners internal contract
   bytes storage_root = 3; 
+  repeated uint32 row_indexes = 4;
 }
 
 message BatchRetrieveRequest {
