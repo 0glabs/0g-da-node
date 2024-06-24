@@ -58,22 +58,25 @@ impl DasStage1Miner {
                 msg = self.on_chain_receiver.recv(), if receive_channel_opened => {
                     match msg {
                         Ok(EpochUpdate(x)) => {
+                            info!(epoch = x, "New epoch");
                             self.lines.new_epoch(x - 1);
                         },
                         Ok(NewSampleTask(task)) => {
+                            info!(?task, "Get new sample task");
                             current_task = Some((task, 0));
                         },
                         Ok(ClosedSampleTask(hash)) => {
+                            info!(?hash, "Close sample task");
                             if current_task.map_or(false, |t| t.0.hash == hash) {
                                 current_task = None;
                             }
                         }
                         Err(broadcast::error::RecvError::Closed)=>{
-                            warn!(target : "Stage 1 Miner", "On-chain status channel closed.");
+                            warn!("On-chain status channel closed.");
                             receive_channel_opened = false;
                         }
                         Err(broadcast::error::RecvError::Lagged(n))=>{
-                            warn!(target : "Stage 1 Miner", number = n, "On-chain status channel lagged.");
+                            warn!(number = n, "On-chain status channel lagged.");
                         }
                     }
                 }
@@ -81,17 +84,17 @@ impl DasStage1Miner {
                 // FIXME: the db load task may suffer a starvation because of line tasks.
                 db = self.db.read(), if self.lines.needs_fetch() => {
                     if let Err(error) = self.lines.fetch_epoch(&*db, Duration::from_millis(100)).await {
-                        warn!(target: "Stage 1 Miner", ?error, "DB error when fetching epochs");
+                        warn!(?error, "DB error when fetching epochs");
                     }
                 }
 
                 _ = async {}, if current_task.is_some() && send_channel_opened => {
                     let (task, start_epoch) = current_task.unwrap();
-                    let (filtered_lines, next_epoch) = self.lines.iter_next_epoch(start_epoch, MINE_EPOCH_BATCH,task);
+                    let (filtered_lines, last_epoch) = self.lines.iter_next_epoch(start_epoch, MINE_EPOCH_BATCH, task);
 
-                    current_task = next_epoch.map(|e| (task, e));
-                    if !filtered_lines.is_empty() && self.first_stage_sender.send(filtered_lines).is_err() {
-                        warn!(target : "Stage 1 Miner", "Two stages channel closed.");
+                    current_task = last_epoch.map(|e| (task, e + 1));
+                    if !filtered_lines.is_empty() &&  self.first_stage_sender.send(filtered_lines).is_err(){
+                        warn!("Two stages channel closed.");
                         send_channel_opened = false;
                     }
                 }

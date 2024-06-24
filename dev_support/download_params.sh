@@ -47,3 +47,8 @@ checked_download() {
 checked_download amt-verify-coset0-5DWgDV-10-20.bin 18bb6b7ba10785a79810180ddd27a6d467d2c0e24e6335e5bc95998e02c6a4f6
 checked_download amt-verify-coset1-5DWgDV-10-20.bin 19b024fed13e0ba60b17184c998dcccf12119b4fd0ab7c46394b8e024e99c48a
 checked_download amt-verify-coset2-5DWgDV-10-20.bin 5660a89402df7d47885b304b566d92e1c42349744e202d45fc61a0893bd796c9
+
+# For dev
+# checked_download amt-prove-coset0-mont-5DWgDV-10-20.bin 6c1d7837e5380ca7e09e1f396b4f8ff3ec546cabcccc7bc65f6439a75a791a80
+# checked_download amt-prove-coset1-mont-5DWgDV-10-20.bin a9f4f6b07a0d66620d652227233c42d12d2726c00f802eadd0e46db68917885a
+# checked_download amt-prove-coset2-mont-5DWgDV-10-20.bin 0314657436c124f2b00c7bb4e239dc551ab4f0f732516ad9dd656ec12b091c17

@@ -47,6 +47,7 @@ impl DasStage2Miner {
                 msg = self.first_stage_receiver.recv(), if receiver_channel_openned && miner_enabled => {
                     match msg {
                         Some(lines) => {
+                            debug!(number = lines.len(), "Receive first stage lines");
                             line_candidates.extend(lines);
                         },
                         None => {
@@ -58,10 +59,15 @@ impl DasStage2Miner {
 
                 db = self.db.read(), if !line_candidates.is_empty() && miner_enabled => {
                     if let Err(e) = self.mine(&*db, &mut line_candidates).await {
-                        warn!(target : "Stage 2 Miner", error = e, "Unexpected error, mine service stopped");
+                        warn!(error = e, "Unexpected error, mine service stopped");
                         miner_enabled = false;
                         self.first_stage_receiver.close();
                     }
+                }
+
+                else => {
+                    warn!("all channel has been closed, return.");
+                    break;
                 }
             }
         }
@@ -74,8 +80,9 @@ impl DasStage2Miner {
     ) -> Result<(), String> {
         while let Some(candidate) = line_candidates.pop() {
             for sample_response in candidate.mine(db).await? {
+                info!("Hit a valid answer");
                 if self.submission_sender.send(sample_response).is_err() {
-                    warn!(target : "Stage 2 Miner", "Submission channel closed.");
+                    warn!("Submission channel closed.");
                     return Err("Submission channel closed".to_string());
                 }
             }

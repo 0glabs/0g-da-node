@@ -77,6 +77,7 @@ pub struct Config {
     pub validator_private_key: String,
     pub data_path: String,
     pub enable_das: bool,
+    pub das_test: bool,
 }
 
 impl Config {
@@ -94,6 +95,7 @@ impl Config {
 
         Ok(Self {
             enable_das: c.get_bool_opt("enable_das")?,
+            das_test: c.get_bool_opt("das_test")?,
             log_level: c.get_string("log_level")?,
             encoder_params_dir: c.get_string("encoder_params_dir")?,
             grpc_listen_address: c.get_string("grpc_listen_address")?,
