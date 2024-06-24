@@ -95,9 +95,9 @@ impl SliceDB for Storage {
         } else {
             return Ok(None);
         };
-        Ok(Some(CanonicalDeserialize::deserialize_uncompressed_unchecked(
-            &*raw_slice,
-        )?))
+        Ok(Some(
+            CanonicalDeserialize::deserialize_uncompressed_unchecked(&*raw_slice)?,
+        ))
     }
 
     async fn get_slice(

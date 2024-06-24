@@ -13,7 +13,7 @@ use crate::{
 pub struct LineCandidate {
     index: SliceIndex,
     task: SampleTask,
-    pub line_quality: U256,
+    line_quality: U256,
 }
 
 impl LineCandidate {

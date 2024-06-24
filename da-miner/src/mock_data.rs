@@ -2,10 +2,7 @@ use rand::{thread_rng, Rng};
 use storage::slice_db::SliceDB;
 use zg_encoder::{EncodedBlob, RawBlob, RawData, ZgEncoderParams};
 
-pub async fn store_mock_data(
-    param_dir: &str,
-    store:&dyn SliceDB,
-)  {
+pub async fn store_mock_data(param_dir: &str, store: &dyn SliceDB) {
     let params = ZgEncoderParams::from_dir_mont(param_dir, false, None);
 
     let mut rng = thread_rng();

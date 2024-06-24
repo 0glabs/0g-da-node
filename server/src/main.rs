@@ -116,13 +116,11 @@ async fn async_main(
     let config = Config::from_cli_file().unwrap();
 
     // tracing
-    
+
     // make sure log level is valid string
     let _ = Level::from_str(&config.log_level)?;
     let filter = EnvFilter::try_new(format!("{},hyper=warn", config.log_level))?;
-    tracing_subscriber::fmt()
-        .with_env_filter(filter)
-        .init();
+    tracing_subscriber::fmt().with_env_filter(filter).init();
 
     let ctx = Context::new(config).await?;
 

@@ -8,7 +8,8 @@ use task_executor::TaskExecutor;
 use tokio::sync::{broadcast, mpsc, RwLock};
 
 use crate::{
-    line_candidate::LineCandidate, mock_data::store_mock_data, stage1::DasStage1Miner, stage2::DasStage2Miner, submitter::DasSubmitter, watcher::DasWatcher
+    line_candidate::LineCandidate, mock_data::store_mock_data, stage1::DasStage1Miner,
+    stage2::DasStage2Miner, submitter::DasSubmitter, watcher::DasWatcher,
 };
 
 pub struct DasMineService;
@@ -27,7 +28,6 @@ impl DasMineService {
             info!("Start store mock da data");
             store_mock_data("./params", &*store.read().await).await;
         }
-        
 
         let (on_chain_sender, on_chain_receiver) = broadcast::channel(1024);
 

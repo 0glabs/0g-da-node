@@ -93,11 +93,9 @@ impl DasStage1Miner {
                     let (filtered_lines, last_epoch) = self.lines.iter_next_epoch(start_epoch, MINE_EPOCH_BATCH, task);
 
                     current_task = last_epoch.map(|e| (task, e + 1));
-                    if !filtered_lines.is_empty() {
-                        if let Err(_) = self.first_stage_sender.send(filtered_lines) {
-                            warn!("Two stages channel closed.");
-                            send_channel_opened = false;
-                        }
+                    if !filtered_lines.is_empty() &&  self.first_stage_sender.send(filtered_lines).is_err(){
+                        warn!("Two stages channel closed.");
+                        send_channel_opened = false;
                     }
                 }
             }

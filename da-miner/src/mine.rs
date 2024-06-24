@@ -103,7 +103,7 @@ pub fn u256_to_bytes32(number: U256) -> [u8; 32] {
 }
 
 pub fn serialize_line(line: &[[u8; 32]]) -> Vec<u8> {
-    if line.len() == 0 {
+    if line.is_empty() {
         return vec![];
     }
 
