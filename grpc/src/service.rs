@@ -12,6 +12,7 @@ use ethers::abi::{self, Token};
 use ethers::types::U256;
 use ethers::utils::keccak256;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
+use signer::{BatchRetrieveReply, BatchRetrieveRequest};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use storage::blob_status_db::{BlobStatus, BlobStatusDB};
@@ -149,6 +150,13 @@ impl Signer for SignerService {
         let reply = self.batch_sign_inner(request).await;
         self.on_complete_batch_sign().await;
         reply
+    }
+
+    async fn batch_retrieve(
+        &self,
+        request: Request<BatchRetrieveRequest>,
+    ) -> Result<Response<BatchRetrieveReply>, Status> {
+        todo!();
     }
 }
 
