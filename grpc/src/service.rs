@@ -9,9 +9,11 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use chain_state::signers_handler::serialize_g1_point;
 use chain_state::ChainState;
 use ethers::abi::{self, Token};
-use ethers::types::U256;
+use ethers::types::{Res, U256};
 use ethers::utils::keccak256;
+use prost::Message;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
+use signer::{BatchRetrieveReply, BatchRetrieveRequest, Slices};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use storage::blob_status_db::{BlobStatus, BlobStatusDB};
@@ -131,10 +133,93 @@ impl SignerService {
                 .await
                 .put_slice(req.epoch, req.quorum_id, storage_root, encoded_slices)
                 .await
-                .map_err(|e| Status::new(Code::Internal, format!("pub slice error: {:?}", e)))?;
+                .map_err(|e| Status::new(Code::Internal, format!("put slice error: {:?}", e)))?;
         }
 
         info!("responsed in {:?} ms", ts.elapsed().as_millis());
+        Ok(Response::new(reply))
+    }
+
+    async fn batch_retrieve_inner(
+        &self,
+        request: Request<BatchRetrieveRequest>,
+    ) -> Result<Response<BatchRetrieveReply>, Status> {
+        let remote_addr = request.remote_addr();
+        let request_content = request.into_inner();
+        let ts = Instant::now();
+
+        info!(?remote_addr, "Received request");
+        let mut reply = BatchRetrieveReply {
+            encoded_slice: vec![],
+        };
+        for req in request_content.requests.iter() {
+            let mut slices = Slices {
+                encoded_slice: vec![],
+            };
+            let storage_root: [u8; 32] = req
+                .storage_root
+                .clone()
+                .try_into()
+                .map_err(|_| Status::new(Code::InvalidArgument, "storage root"))?;
+            let maybe_assigned_slices = self
+                .db
+                .read()
+                .await
+                .get_assgined_slices(req.epoch, req.quorum_id)
+                .await
+                .map_err(|e| Status::new(Code::Internal, e.to_string()))?;
+            match maybe_assigned_slices {
+                Some(AssignedSlices(assigned_slices)) => {
+                    let mut row_indexes = req.row_indexes.clone();
+                    row_indexes.sort_unstable();
+                    row_indexes.dedup();
+                    if row_indexes.len() > assigned_slices.len() {
+                        return Err(Status::new(Code::InvalidArgument, "invalid row indexes"));
+                    }
+                    let mut j = 0;
+                    for row_index in row_indexes.iter() {
+                        while j < assigned_slices.len() && assigned_slices[j] < *row_index as u64 {
+                            j += 1;
+                        }
+                        if j < assigned_slices.len() && assigned_slices[j] == *row_index as u64 {
+                            let maybe_slice = self
+                                .db
+                                .read()
+                                .await
+                                .get_raw_slice(
+                                    req.epoch,
+                                    req.quorum_id,
+                                    storage_root,
+                                    assigned_slices[j] as usize,
+                                )
+                                .await
+                                .map_err(|e| Status::new(Code::Internal, e.to_string()))?;
+                            match maybe_slice {
+                                Some(slice) => {
+                                    slices.encoded_slice.push(slice);
+                                }
+                                None => {
+                                    error!("slice is missing: epoch = {:?}, quorum = {:?}, storage_root = {:?}, row_index = {:?}", req.epoch, req.quorum_id, hex::encode(storage_root), assigned_slices[j]);
+                                    return Err(Status::new(
+                                        Code::Internal,
+                                        "slice is missing".to_string(),
+                                    ));
+                                }
+                            }
+                        } else {
+                            return Err(Status::new(Code::InvalidArgument, "invalid row indexes"));
+                        }
+                    }
+                }
+                None => {
+                    return Err(Status::new(
+                        Code::Internal,
+                        format!("quorum of epoch {:?} not found", req.epoch),
+                    ));
+                }
+            }
+            reply.encoded_slice.push(slices);
+        }
         Ok(Response::new(reply))
     }
 }
@@ -149,6 +234,13 @@ impl Signer for SignerService {
         let reply = self.batch_sign_inner(request).await;
         self.on_complete_batch_sign().await;
         reply
+    }
+
+    async fn batch_retrieve(
+        &self,
+        request: Request<BatchRetrieveRequest>,
+    ) -> Result<Response<BatchRetrieveReply>, Status> {
+        self.batch_retrieve_inner(request).await
     }
 }
 
@@ -277,7 +369,7 @@ impl SignerService {
                 )?;
             }
             None => {
-                return Err("quorum not found".into());
+                return Err(anyhow!("quorum of epoch {:?} not found", epoch).into());
             }
         }
         Ok(())

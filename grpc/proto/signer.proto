@@ -4,6 +4,7 @@ package signer;
 
 service Signer {
   rpc BatchSign(BatchSignRequest) returns (BatchSignReply) {}
+  rpc BatchRetrieve(BatchRetrieveRequest) returns (BatchRetrieveReply) {}
 }
 
 message SignRequest {
@@ -20,4 +21,23 @@ message BatchSignRequest {
 
 message BatchSignReply {
   repeated bytes signatures = 1;
+}
+
+message RetrieveRequest {
+  uint64 epoch = 1; // epoch number of DASigners internal contract
+  uint64 quorum_id = 2; // quorum id of DASigners internal contract
+  bytes storage_root = 3; 
+  repeated uint32 row_indexes = 4;
+}
+
+message BatchRetrieveRequest {
+  repeated RetrieveRequest requests = 1;
+}
+
+message Slices {
+  repeated bytes encoded_slice = 1;
+}
+
+message BatchRetrieveReply {
+  repeated Slices encoded_slice = 1;
 }

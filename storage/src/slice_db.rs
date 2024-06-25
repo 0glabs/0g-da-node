@@ -48,6 +48,14 @@ impl SliceIndex {
 
 #[async_trait]
 pub trait SliceDB {
+    async fn get_raw_slice(
+        &self,
+        epoch: u64,
+        quorum_id: u64,
+        storage_root: [u8; 32],
+        index: usize,
+    ) -> Result<Option<Vec<u8>>>;
+
     async fn get_slice_data(
         &self,
         epoch: u64,
@@ -77,6 +85,26 @@ pub trait SliceDB {
 
 #[async_trait]
 impl SliceDB for Storage {
+    async fn get_raw_slice(
+        &self,
+        epoch: u64,
+        quorum_id: u64,
+        storage_root: [u8; 32],
+        index: usize,
+    ) -> Result<Option<Vec<u8>>> {
+        let index = SliceIndex {
+            epoch,
+            quorum_id,
+            storage_root,
+            index: index as u64,
+        };
+        if let Some(slice) = self.db.get(COL_SLICE, &index.to_data_key())? {
+            Ok(Some(slice))
+        } else {
+            Ok(None)
+        }
+    }
+
     async fn get_slice_data(
         &self,
         epoch: u64,
@@ -84,13 +112,10 @@ impl SliceDB for Storage {
         storage_root: [u8; 32],
         index: usize,
     ) -> Result<Option<Vec<[u8; 32]>>> {
-        let index = SliceIndex {
-            epoch,
-            quorum_id,
-            storage_root,
-            index: index as u64,
-        };
-        let raw_slice = if let Some(slice) = self.db.get(COL_SLICE, &index.to_data_key())? {
+        let raw_slice = if let Some(slice) = self
+            .get_raw_slice(epoch, quorum_id, storage_root, index)
+            .await?
+        {
             slice
         } else {
             return Ok(None);
