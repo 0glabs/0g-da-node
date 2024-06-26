@@ -41,7 +41,7 @@ dependencies = [
 [[package]]
 name = "ag-build"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8#f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8"
+source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=6ceca01ae330209227b3681788bfb9c85fbd3186#6ceca01ae330209227b3681788bfb9c85fbd3186"
 dependencies = [
  "ag-types",
  "ark-ff",
@@ -55,7 +55,7 @@ dependencies = [
 [[package]]
 name = "ag-cuda-ec"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8#f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8"
+source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=6ceca01ae330209227b3681788bfb9c85fbd3186#6ceca01ae330209227b3681788bfb9c85fbd3186"
 dependencies = [
  "ag-build",
  "ag-cuda-proxy",
@@ -73,7 +73,7 @@ dependencies = [
 [[package]]
 name = "ag-cuda-proxy"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8#f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8"
+source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=6ceca01ae330209227b3681788bfb9c85fbd3186#6ceca01ae330209227b3681788bfb9c85fbd3186"
 dependencies = [
  "ag-types",
  "fil-rustacuda",
@@ -83,7 +83,7 @@ dependencies = [
 [[package]]
 name = "ag-cuda-workspace-macro"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8#f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8"
+source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=6ceca01ae330209227b3681788bfb9c85fbd3186#6ceca01ae330209227b3681788bfb9c85fbd3186"
 dependencies = [
  "quote",
  "syn 2.0.63",
@@ -92,7 +92,7 @@ dependencies = [
 [[package]]
 name = "ag-types"
 version = "0.2.0"
-source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8#f39b4b0f4c8b3dc28a09bd09802c5a88ae56c3b8"
+source = "git+https://github.com/0glabs/0g-ec-gpu.git?rev=6ceca01ae330209227b3681788bfb9c85fbd3186#6ceca01ae330209227b3681788bfb9c85fbd3186"
 dependencies = [
  "ark-ec",
  "ark-ff",
@@ -133,7 +133,7 @@ dependencies = [
 [[package]]
 name = "amt"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=6193c635b00d19ea2dc9a0192499a5114df41a92#6193c635b00d19ea2dc9a0192499a5114df41a92"
+source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=95593e1f439e8c00d3b6ffc0a4ab9f6d516c7f94#95593e1f439e8c00d3b6ffc0a4ab9f6d516c7f94"
 dependencies = [
  "ag-cuda-ec",
  "ag-types",
@@ -5104,7 +5104,7 @@ dependencies = [
 [[package]]
 name = "zg-encoder"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=6193c635b00d19ea2dc9a0192499a5114df41a92#6193c635b00d19ea2dc9a0192499a5114df41a92"
+source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=95593e1f439e8c00d3b6ffc0a4ab9f6d516c7f94#95593e1f439e8c00d3b6ffc0a4ab9f6d516c7f94"
 dependencies = [
  "amt",
  "ark-bn254",
