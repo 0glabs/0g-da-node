@@ -18,7 +18,7 @@ const MESSAGE_SIZE_LIMIT: usize = 1024 * 1024 * 1024; // 1G
 pub async fn run_server(
     db: Arc<RwLock<Storage>>,
     chain_state: Arc<ChainState>,
-    signer_private_key: Fr,
+    signer_bls_private_key: Fr,
     addr: SocketAddr,
     encoder_params_dir: String,
     max_ongoing_sign_request: Option<u64>,
@@ -26,7 +26,7 @@ pub async fn run_server(
     let signer_service = SignerService::new(
         db,
         chain_state,
-        signer_private_key,
+        signer_bls_private_key,
         encoder_params_dir,
         max_ongoing_sign_request,
     );

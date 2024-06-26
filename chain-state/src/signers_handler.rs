@@ -84,7 +84,7 @@ fn epoch_registration_hash(signer_address: H160, epoch: u64, chain_id: u64) -> G
 impl ChainState {
     pub async fn check_signer_registration(
         &self,
-        signer_private_key: Fr,
+        signer_bls_private_key: Fr,
         socket: String,
     ) -> Result<()> {
         if !self
@@ -93,13 +93,15 @@ impl ChainState {
             .call()
             .await?
         {
-            let signer_pub_key_g1 = (g1::G1Affine::generator() * signer_private_key).into_affine();
-            let signer_pub_key_g2 = (g2::G2Affine::generator() * signer_private_key).into_affine();
+            let signer_pub_key_g1 =
+                (g1::G1Affine::generator() * signer_bls_private_key).into_affine();
+            let signer_pub_key_g2 =
+                (g2::G2Affine::generator() * signer_bls_private_key).into_affine();
             let hash = signer_registration_hash(
                 self.signer_address,
                 self.provider.get_chainid().await?.as_u64(),
             );
-            let signature = (hash * signer_private_key).into_affine();
+            let signature = (hash * signer_bls_private_key).into_affine();
             let maybe_input_data = self
                 .da_signers
                 .register_signer(
@@ -183,10 +185,10 @@ impl ChainState {
     }
 }
 
-pub fn start_epoch_registration(chain_state: Arc<ChainState>, signer_private_key: Fr) {
+pub fn start_epoch_registration(chain_state: Arc<ChainState>, signer_bls_private_key: Fr) {
     tokio::spawn(async move {
         loop {
-            match check_epoch(chain_state.clone(), signer_private_key).await {
+            match check_epoch(chain_state.clone(), signer_bls_private_key).await {
                 Ok(_) => {}
                 Err(e) => {
                     error!("poll check_new_epoch error: {:?}", e);
@@ -197,7 +199,7 @@ pub fn start_epoch_registration(chain_state: Arc<ChainState>, signer_private_key
     });
 }
 
-async fn check_epoch(chain_state: Arc<ChainState>, signer_private_key: Fr) -> Result<()> {
+async fn check_epoch(chain_state: Arc<ChainState>, signer_bls_private_key: Fr) -> Result<()> {
     match chain_state
         .provider
         .get_block(BlockNumber::Finalized)
@@ -213,7 +215,8 @@ async fn check_epoch(chain_state: Arc<ChainState>, signer_private_key: Fr) -> Re
                     .await?)
                     .as_u64();
                 check_new_quorums(chain_state.clone(), epoch).await?;
-                check_new_registration(chain_state.clone(), signer_private_key, epoch + 1).await?;
+                check_new_registration(chain_state.clone(), signer_bls_private_key, epoch + 1)
+                    .await?;
                 Ok(())
             } else {
                 bail!(anyhow!("block number is empty"));
@@ -227,7 +230,7 @@ async fn check_epoch(chain_state: Arc<ChainState>, signer_private_key: Fr) -> Re
 
 async fn check_new_registration(
     chain_state: Arc<ChainState>,
-    signer_private_key: Fr,
+    signer_bls_private_key: Fr,
     next_epoch: u64,
 ) -> Result<()> {
     if !chain_state
@@ -242,7 +245,7 @@ async fn check_new_registration(
             next_epoch,
             chain_state.provider.get_chainid().await?.as_u64(),
         );
-        let signature = (hash * signer_private_key).into_affine();
+        let signature = (hash * signer_bls_private_key).into_affine();
         let maybe_input_data = chain_state
             .da_signers
             .register_next_epoch(serialize_g1_point(signature))

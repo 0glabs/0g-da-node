@@ -9,7 +9,9 @@ members = [
 	"utils",
 	"client",
 	"da-miner",
-	"chain-utils"]
+	"chain-utils",
+	"key-gen"
+]
 
 [workspace.dependencies]
 grpc = { path = "./grpc" } 

@@ -73,8 +73,8 @@ pub struct Config {
     pub eth_rpc_url: String,
     pub start_block_number: u64,
     pub da_entrance_address: H160,
-    pub signer_private_key: Fr,
-    pub validator_private_key: String,
+    pub signer_bls_private_key: Fr,
+    pub signer_eth_private_key: String,
     pub data_path: String,
     pub enable_das: bool,
     pub das_test: bool,
@@ -105,8 +105,8 @@ impl Config {
             eth_rpc_url: c.get_string("eth_rpc_endpoint")?,
             start_block_number: c.get_u64("start_block_number")?,
             da_entrance_address: c.get_address("da_entrance_address")?,
-            signer_private_key: c.get_bls_key("signer_private_key")?,
-            validator_private_key: c.get_string("validator_private_key")?,
+            signer_bls_private_key: c.get_bls_key("signer_bls_private_key")?,
+            signer_eth_private_key: c.get_string("signer_eth_private_key")?,
             data_path: c.get_string("data_path")?,
         })
     }
