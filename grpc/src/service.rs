@@ -3,7 +3,7 @@
 use crate::service::signer::signer_server::{Signer, SignerServer};
 use crate::service::signer::{BatchSignReply, BatchSignRequest};
 use anyhow::{anyhow, bail};
-use ark_bn254::{Fq, Fr, G1Affine, G1Projective};
+use ark_bn254::{Bn254, Fq, Fr, G1Affine, G1Projective};
 use ark_ec::{AffineRepr, CurveGroup};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use chain_state::signers_handler::serialize_g1_point;
@@ -24,7 +24,7 @@ use tokio::sync::RwLock;
 use tonic::metadata::KeyAndMutValueRef;
 use tonic::{Code, Request, Response, Status};
 use utils::map_to_g1;
-use zg_encoder::{EncodedSlice, ZgEncoderParams, ZgSignerParams};
+use zg_encoder::{DeferredVerifier, EncodedSlice, ZgEncoderParams, ZgSignerParams};
 
 use self::signer::SignRequest;
 
@@ -117,6 +117,10 @@ impl SignerService {
                     VerificationError::IncorrectSlice(e) => Status::new(
                         Code::InvalidArgument,
                         format!("verification failed: {:?}", e),
+                    ),
+                    VerificationError::DeferredVerifyFail => Status::new(
+                        Code::InvalidArgument,
+                        format!("received slice does not pass pairing check, the accelerated verification algorithm cannot detect the specific error location"),
                     ),
                 });
             }
@@ -248,6 +252,7 @@ pub enum VerificationError {
     Internal(anyhow::Error),
     SliceMismatch,
     IncorrectSlice(zg_encoder::VerifierError),
+    DeferredVerifyFail,
 }
 
 impl From<&'static str> for VerificationError {
@@ -386,23 +391,40 @@ impl SignerService {
             return Err(VerificationError::SliceMismatch);
         }
         let ts = Instant::now();
-        let res = assigned_slices
+
+        let deferred_verifier = DeferredVerifier::new();
+        let res: Result<(), _> = assigned_slices
             .par_iter()
             .zip(encoded_slices)
-            .map(|(expected_index, slice)| -> Result<(), VerificationError> {
+            .map(|(expected_index, slice)| {
+                let verifier = deferred_verifier.clone();
                 if *expected_index != slice.index as u64 {
                     Err(VerificationError::SliceMismatch)
                 } else {
-                    Ok(slice.verify(&self.encoder_params, &erasure_commitment, &storage_root)?)
+                    Ok(slice.verify(
+                        &self.encoder_params,
+                        &erasure_commitment,
+                        &storage_root,
+                        Some(verifier),
+                    )?)
                 }
             })
             .collect();
+
+        let deferred_pass = deferred_verifier.fast_check();
+
         info!(
             "used {:?} ms to verify {:?} slices.",
             ts.elapsed().as_millis(),
             assigned_slices.len()
         );
-        res
+        res?;
+
+        if !deferred_pass {
+            Err(VerificationError::DeferredVerifyFail)
+        } else {
+            Ok(())
+        }
     }
 }
 
