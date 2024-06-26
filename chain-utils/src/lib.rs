@@ -17,7 +17,7 @@ pub const DA_SIGNER_ADDRESS: &str = "0x0000000000000000000000000000000000001000"
 
 pub async fn make_provider(
     eth_rpc_url: &str,
-    validator_private_key: &str,
+    signer_eth_private_key: &str,
 ) -> Result<DefaultMiddleware> {
     let eth_rpc = Http::from_str(eth_rpc_url)?;
     let provider = Provider::new(
@@ -28,7 +28,7 @@ pub async fn make_provider(
             .build(eth_rpc, Box::new(HttpRateLimitRetryPolicy)),
     );
 
-    let local_wallet = LocalWallet::from_str(validator_private_key)
+    let local_wallet = LocalWallet::from_str(signer_eth_private_key)
         .map_err(|e| anyhow!("Invalid validator private key: {:?}", e))?;
     let chain_id = provider
         .get_chainid()

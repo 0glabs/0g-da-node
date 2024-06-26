@@ -37,7 +37,7 @@ const DEFAULT_MAX_ONGOING_SIGN_REQUEST: u64 = 10;
 pub struct SignerService {
     db: Arc<RwLock<Storage>>,
     chain_state: Arc<ChainState>,
-    signer_private_key: Fr,
+    signer_bls_private_key: Fr,
     encoder_params: ZgSignerParams,
     max_ongoing_sign_request: u64,
     ongoing_sign_request_cnt: Arc<RwLock<u64>>,
@@ -47,14 +47,14 @@ impl SignerService {
     pub fn new(
         db: Arc<RwLock<Storage>>,
         chain_state: Arc<ChainState>,
-        signer_private_key: Fr,
+        signer_bls_private_key: Fr,
         params_dir: String,
         max_ongoing_sign_request: Option<u64>,
     ) -> Self {
         Self {
             db,
             chain_state,
-            signer_private_key,
+            signer_bls_private_key,
             encoder_params: ZgSignerParams::from_dir_mont(params_dir),
             max_ongoing_sign_request: max_ongoing_sign_request
                 .unwrap_or(DEFAULT_MAX_ONGOING_SIGN_REQUEST),
@@ -120,14 +120,14 @@ impl SignerService {
                     ),
                     VerificationError::DeferredVerifyFail => Status::new(
                         Code::InvalidArgument,
-                        format!("received slice does not pass pairing check, the accelerated verification algorithm cannot detect the specific error location"),
+                        "received slice does not pass pairing check, the accelerated verification algorithm cannot detect the specific error location".to_string(),
                     ),
                 });
             }
 
             let hash =
                 blob_verified_hash(storage_root, req.epoch, req.quorum_id, erasure_commitment);
-            let signature = (hash * self.signer_private_key).into_affine();
+            let signature = (hash * self.signer_bls_private_key).into_affine();
             let mut value = Vec::new();
             signature.serialize_uncompressed(&mut value);
             reply.signatures.push(value);
@@ -493,8 +493,8 @@ mod tests {
                 .into(),
             )
         );
-        let signer_private_key: Fr = Fr::from_str("1").unwrap();
-        let signature = (hash * signer_private_key).into_affine();
+        let signer_bls_private_key: Fr = Fr::from_str("1").unwrap();
+        let signature = (hash * signer_bls_private_key).into_affine();
         assert_eq!(
             signature,
             G1Affine::new(

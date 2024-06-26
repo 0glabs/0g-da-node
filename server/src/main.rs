@@ -26,7 +26,7 @@ use crate::runtime::make_environment;
 
 async fn start_grpc_server(chain_state: Arc<ChainState>, ctx: &Context) -> Result<()> {
     let db = ctx.db.clone();
-    let signer_private_key = ctx.config.signer_private_key;
+    let signer_bls_private_key = ctx.config.signer_bls_private_key;
     let grpc_listen_address = ctx.config.grpc_listen_address.clone();
     let encoder_params_dir = ctx.config.encoder_params_dir.clone();
     let max_ongoing_sign_request = ctx.config.max_ongoing_sign_request;
@@ -35,7 +35,7 @@ async fn start_grpc_server(chain_state: Arc<ChainState>, ctx: &Context) -> Resul
         run_server(
             db,
             chain_state,
-            signer_private_key,
+            signer_bls_private_key,
             SocketAddr::from_str(&grpc_listen_address).unwrap(),
             encoder_params_dir,
             max_ongoing_sign_request,
@@ -59,11 +59,11 @@ async fn setup_chain_state(ctx: &Context) -> Result<Arc<ChainState>> {
     );
     chain_state
         .check_signer_registration(
-            ctx.config.signer_private_key,
+            ctx.config.signer_bls_private_key,
             ctx.config.socket_address.clone(),
         )
         .await?;
-    start_epoch_registration(chain_state.clone(), ctx.config.signer_private_key);
+    start_epoch_registration(chain_state.clone(), ctx.config.signer_bls_private_key);
     start_da_monitor(chain_state.clone(), ctx.config.start_block_number).await?;
     Ok(chain_state)
 }

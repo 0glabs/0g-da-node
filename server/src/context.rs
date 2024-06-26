@@ -17,7 +17,7 @@ pub struct Context {
 impl Context {
     pub async fn new(config: Config) -> Result<Self> {
         let provider =
-            chain_utils::make_provider(&config.eth_rpc_url, &config.validator_private_key)
+            chain_utils::make_provider(&config.eth_rpc_url, &config.signer_eth_private_key)
                 .await
                 .unwrap();
         let transactor: Arc<Mutex<Transactor>> =
