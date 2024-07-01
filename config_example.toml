@@ -12,12 +12,12 @@ eth_rpc_endpoint = "https://rpc-testnet.0g.ai"
 # public grpc service socket address to register in DA contract
 # http://ip:34000 (keep same port as the grpc listen address)
 # or if you have dns, fill https://your.dns.ip
-socket_address = "http://ip:34000"
+socket_address = "http(s)://<public_ip/dns>:34000"
 
 # data availability contract to interact with
-da_entrance_address = "0xDFC8B84e3C98e8b550c7FEF00BCB2d8742d80a69"
+da_entrance_address = ""
 # deployed block number of da entrance contract
-start_block_number = 16147
+start_block_number = 0
 
 # signer BLS private key
 signer_bls_private_key = ""
