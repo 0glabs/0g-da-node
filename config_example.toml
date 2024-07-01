@@ -1,16 +1,28 @@
 log_level = "info"
 
 data_path = "./db/"
-encoder_params_dir = "./params/"
 
+# path to downloaded params folder
+encoder_params_dir = "params/" 
+
+# grpc server listen address
 grpc_listen_address = "0.0.0.0:34000"
-eth_rpc_endpoint = "http://0.0.0.0:8545"
-socket_address = "https://your.signer.com"
+# chain eth rpc endpoint
+eth_rpc_endpoint = "https://rpc-testnet.0g.ai"
+# public grpc service socket address to register in DA contract
+# http://ip:34000 (keep same port as the grpc listen address)
+# or if you have dns, fill https://your.dns.ip
+socket_address = "http://ip:34000"
 
-da_entrance_address = "0x64fcfde2350E08E7BaDc18771a7674FAb5E137a2"
-start_block_number = 0
+# data availability contract to interact with
+da_entrance_address = "0xDFC8B84e3C98e8b550c7FEF00BCB2d8742d80a69"
+# deployed block number of da entrance contract
+start_block_number = 16147
 
-signer_bls_private_key = "1"
+# signer BLS private key
+signer_bls_private_key = ""
+# signer eth account private key
 signer_eth_private_key = ""
 
+# whether to enable data availability sampling
 enable_das = "false"
