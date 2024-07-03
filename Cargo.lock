@@ -133,7 +133,7 @@ dependencies = [
 [[package]]
 name = "amt"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=95593e1f439e8c00d3b6ffc0a4ab9f6d516c7f94#95593e1f439e8c00d3b6ffc0a4ab9f6d516c7f94"
+source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=6d5bac1#6d5bac1a387bbb20f707aca66b0c4cfba0ff1137"
 dependencies = [
  "ag-cuda-ec",
  "ag-types",
@@ -5115,7 +5115,7 @@ dependencies = [
 [[package]]
 name = "zg-encoder"
 version = "0.1.0"
-source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=95593e1f439e8c00d3b6ffc0a4ab9f6d516c7f94#95593e1f439e8c00d3b6ffc0a4ab9f6d516c7f94"
+source = "git+https://github.com/0glabs/0g-da-encoder.git?rev=6d5bac1#6d5bac1a387bbb20f707aca66b0c4cfba0ff1137"
 dependencies = [
  "amt",
  "ark-bn254",
