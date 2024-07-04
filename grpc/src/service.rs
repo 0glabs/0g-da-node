@@ -13,7 +13,7 @@ use ethers::types::{Res, U256};
 use ethers::utils::keccak256;
 use prost::Message;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
-use signer::{BatchRetrieveReply, BatchRetrieveRequest, Slices};
+use signer::{BatchRetrieveReply, BatchRetrieveRequest, Empty, Slices};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use storage::blob_status_db::{BlobStatus, BlobStatusDB};
@@ -245,6 +245,16 @@ impl Signer for SignerService {
         request: Request<BatchRetrieveRequest>,
     ) -> Result<Response<BatchRetrieveReply>, Status> {
         self.batch_retrieve_inner(request).await
+    }
+
+    async fn get_status(
+        &self,
+        request: Request<Empty>,
+    ) -> Result<Response<signer::StatusReply>, Status> {
+        let status = signer::StatusReply {
+            status_code: 200
+        };
+        Ok(Response::new(status))
     }
 }
 
