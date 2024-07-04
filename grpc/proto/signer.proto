@@ -7,6 +7,7 @@ service Signer {
   rpc BatchSign(BatchSignRequest) returns (BatchSignReply) {}
   // This retrieves the requested encoded rows from the DA node database.
   rpc BatchRetrieve(BatchRetrieveRequest) returns (BatchRetrieveReply) {}
+  rpc GetStatus(Empty) returns (StatusReply) {}
 }
 
 message SignRequest {
@@ -54,3 +55,9 @@ message BatchRetrieveReply {
   // required encoded slices
   repeated Slices encoded_slice = 1;
 }
+
+message StatusReply {
+  uint64 status_code = 1;
+}
+
+message Empty {}
