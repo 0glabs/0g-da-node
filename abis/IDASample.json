@@ -15,7 +15,7 @@
         {
           "indexed": true,
           "internalType": "uint256",
-          "name": "sampleHeight",
+          "name": "sampleRound",
           "type": "uint256"
         },
         {
@@ -53,10 +53,101 @@
           "internalType": "uint256",
           "name": "sublineIndex",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "reward",
+          "type": "uint256"
         }
       ],
       "name": "DAReward",
       "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "sampleRound",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "sampleHeight",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "sampleSeed",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "podasTarget",
+          "type": "uint256"
+        }
+      ],
+      "name": "NewSampleRound",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_dataRoot",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_epoch",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_quorumId",
+          "type": "uint256"
+        }
+      ],
+      "name": "commitmentExists",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "sampleRange",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint64",
+              "name": "startEpoch",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "endEpoch",
+              "type": "uint64"
+            }
+          ],
+          "internalType": "struct IDASample.SampleRange",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
       "inputs": [],
@@ -71,21 +162,16 @@
             },
             {
               "internalType": "uint256",
-              "name": "quality",
+              "name": "podasTarget",
               "type": "uint256"
             },
             {
               "internalType": "uint64",
-              "name": "sampleHeight",
-              "type": "uint64"
-            },
-            {
-              "internalType": "uint64",
-              "name": "numSubmissions",
+              "name": "restSubmissions",
               "type": "uint64"
             }
           ],
-          "internalType": "struct SampleTask",
+          "internalType": "struct IDASample.SampleTask",
           "name": "",
           "type": "tuple"
         }
@@ -98,9 +184,9 @@
         {
           "components": [
             {
-              "internalType": "uint64",
-              "name": "sampleHeight",
-              "type": "uint64"
+              "internalType": "bytes32",
+              "name": "sampleSeed",
+              "type": "bytes32"
             },
             {
               "internalType": "uint64",

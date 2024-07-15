@@ -1,9 +1,8 @@
-use chain_utils::{DefaultMiddleware, DefaultMiddlewareInner, DA_SIGNER_ADDRESS};
+use chain_utils::{DefaultMiddleware, DefaultMiddlewareInner};
 use contract_interface::{
     da_sample::{self},
-    DASample, DASigners,
+    DASample,
 };
-use std::str::FromStr;
 use task_executor::TaskExecutor;
 
 use ethers::types::{Address, H256, U256};
@@ -11,31 +10,27 @@ use ethers::types::{Address, H256, U256};
 use tokio::sync::broadcast;
 use tokio::time::{sleep, Duration, Instant};
 
-const TARGET_SUBMISSIONS: usize = 20;
-
 #[derive(Debug, Clone, Copy)]
 pub struct SampleTask {
-    pub hash: H256,
-    pub height: u64,
-    pub quality: U256,
+    pub sample_seed: H256,
+    pub podas_target: U256,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum OnChainChangeMessage {
-    EpochUpdate(u64),
+    UpdateSampleRange(u64, u64),
     NewSampleTask(SampleTask),
     ClosedSampleTask(H256),
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct OnChainStatus {
-    current_epoch: u64,
+    sample_range: (u64, u64),
     sample_hash: H256,
 }
 
 pub struct DasWatcher {
     da_contract: DASample<DefaultMiddlewareInner>,
-    da_signer: DASigners<DefaultMiddlewareInner>,
 
     sender: broadcast::Sender<OnChainChangeMessage>,
     last_status: Option<OnChainStatus>,
@@ -47,28 +42,11 @@ impl DasWatcher {
         provider: DefaultMiddleware,
         sender: broadcast::Sender<OnChainChangeMessage>,
         da_address: Address,
-        das_test: bool,
-    ) -> Result<u64, String> {
+    ) -> Result<(), String> {
         let da_contract = DASample::new(da_address, provider.clone());
-
-        let signer_address = if das_test {
-            da_address
-        } else {
-            Address::from_str(DA_SIGNER_ADDRESS).unwrap()
-        };
-        let da_signer = DASigners::new(signer_address, provider.clone());
-
-        let epoch_number = da_signer
-            .epoch_number()
-            .call()
-            .await
-            .map_err(|e| format!("Failed to query sample context: {:?}", e))?
-            .as_u64();
-        info!("Epoch number at building stage {}", epoch_number);
 
         let das_watcher = Self {
             da_contract,
-            da_signer,
             sender,
             last_status: None,
         };
@@ -76,7 +54,8 @@ impl DasWatcher {
             async move { Box::pin(das_watcher.start()).await },
             "das_watcher",
         );
-        Ok(epoch_number)
+
+        Ok(())
     }
 
     async fn start(mut self) {
@@ -111,43 +90,43 @@ impl DasWatcher {
         use OnChainChangeMessage::*;
 
         let sample_call = self.da_contract.sample_task();
-        let epoch_call = self.da_signer.epoch_number();
-        let (sample_context_res, epoch_call_res) =
-            tokio::join!(sample_call.call(), epoch_call.call());
+        let range_call = self.da_contract.sample_range();
+        let (sample_context_res, range_res) = tokio::join!(sample_call.call(), range_call.call());
 
         let sample_context: da_sample::SampleTask =
             sample_context_res.map_err(|e| format!("Failed to query sample task: {:?}", e))?;
-        let epoch_number = epoch_call_res
-            .map_err(|e| format!("Failed to query sample context: {:?}", e))?
-            .as_u64();
+        let da_sample::SampleRange {
+            start_epoch,
+            end_epoch,
+        } = range_res.map_err(|e| format!("Failed to query sample range: {:?}", e))?;
 
         let last_status = self.last_status.as_ref();
 
-        if last_status.map_or(true, |x| x.current_epoch != epoch_number) {
+        if last_status.map_or(true, |x| x.sample_range != (start_epoch, end_epoch)) {
             self.sender
-                .send(EpochUpdate(epoch_number))
+                .send(UpdateSampleRange(start_epoch, end_epoch))
                 .map_err(|e| format!("Broadcast error: {:?}", e))?;
         }
 
         let sample_hash = H256(sample_context.sample_hash);
-        if last_status.map_or(true, |x| x.sample_hash != sample_hash) {
+        if sample_hash != H256::zero() && last_status.map_or(true, |x| x.sample_hash != sample_hash)
+        {
             self.sender
                 .send(NewSampleTask(SampleTask {
-                    hash: sample_hash,
-                    quality: sample_context.quality,
-                    height: sample_context.sample_height,
+                    sample_seed: sample_hash,
+                    podas_target: sample_context.podas_target,
                 }))
                 .map_err(|e| format!("Broadcast error: {:?}", e))?;
         }
 
-        if sample_context.num_submissions > TARGET_SUBMISSIONS as u64 * 2 {
+        if sample_hash != H256::zero() && sample_context.rest_submissions == 0 {
             self.sender
                 .send(ClosedSampleTask(sample_hash))
                 .map_err(|e| format!("Broadcast error: {:?}", e))?;
         }
 
         Ok(OnChainStatus {
-            current_epoch: epoch_number,
+            sample_range: (start_epoch, end_epoch),
             sample_hash,
         })
     }

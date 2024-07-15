@@ -22,15 +22,23 @@ impl LineMetadata {
         !self.epoch_to_fetch.is_empty()
     }
 
-    pub fn new_epoch(&mut self, epoch: u64) {
-        info!(epoch, "New epoch context to fetch");
-        self.epoch_to_fetch.insert(epoch);
-    }
+    pub fn set_epoch_range(&mut self, start_epoch: u64, end_epoch: u64) {
+        // Retain keys in [start_epoch, end_epoch]
+        let mut data = std::mem::take(&mut self.data);
+        let mut data = data.split_off(&start_epoch);
+        data.split_off(&(end_epoch + 1));
+        self.data = data;
 
-    pub fn new_epoch_range(&mut self, epoches: impl IntoIterator<Item = u64>) {
-        for e in epoches {
-            self.epoch_to_fetch.insert(e);
-        }
+        self.epoch_to_fetch = (start_epoch..=end_epoch)
+            .filter(|x| !self.data.contains_key(x))
+            .collect();
+
+        info!(
+            start_epoch,
+            end_epoch,
+            to_fetch_epoches = self.epoch_to_fetch.len(),
+            "Update metadata for epoches"
+        );
     }
 
     pub async fn fetch_epoch(
@@ -58,9 +66,7 @@ impl LineMetadata {
                 .await
                 .map_err(|e| format!("Fail to fetch epoch {}: {:?}", next_epoch, e))?;
 
-            if !epoch_info.is_empty() {
-                self.data.insert(next_epoch, epoch_info);
-            }
+            self.data.insert(next_epoch, epoch_info);
         }
         Ok(())
     }
@@ -83,15 +89,20 @@ impl LineMetadata {
         let mut last_epoch = 0;
 
         let mut max_quality = [0u8; 32];
-        task.quality.to_big_endian(&mut max_quality);
+        task.podas_target.to_big_endian(&mut max_quality);
 
         for (&epoch, blobs) in self.data.range(start_epoch..).take(num_batch) {
             for blob in blobs.iter() {
                 let quorum_id = blob.quorum_id;
                 let storage_root = blob.storage_root;
                 for &index in &blob.indicies {
-                    let line_quality =
-                        calculate_line_quality(task.hash, epoch, quorum_id, storage_root, index);
+                    let line_quality = calculate_line_quality(
+                        task.sample_seed,
+                        epoch,
+                        quorum_id,
+                        storage_root,
+                        index,
+                    );
                     if line_quality <= max_quality {
                         answer.push(LineCandidate::new(
                             SliceIndex {

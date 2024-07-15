@@ -162,6 +162,35 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "_epoch",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_quorumId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint32",
+          "name": "_rowIndex",
+          "type": "uint32"
+        }
+      ],
+      "name": "getQuorumRow",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address[]",
           "name": "_account",
           "type": "address[]"

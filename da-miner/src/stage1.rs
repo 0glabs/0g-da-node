@@ -24,10 +24,8 @@ impl DasStage1Miner {
         db: Arc<RwLock<Storage>>,
         on_chain_receiver: broadcast::Receiver<OnChainChangeMessage>,
         first_stage_sender: mpsc::UnboundedSender<Vec<LineCandidate>>,
-        current_epoch: u64,
     ) {
-        let mut lines = LineMetadata::default();
-        lines.new_epoch_range(0u64..current_epoch);
+        let lines = LineMetadata::default();
 
         let stage1_miner = Self {
             db,
@@ -57,9 +55,8 @@ impl DasStage1Miner {
 
                 msg = self.on_chain_receiver.recv(), if receive_channel_opened => {
                     match msg {
-                        Ok(EpochUpdate(x)) => {
-                            info!(epoch = x, "New epoch");
-                            self.lines.new_epoch(x - 1);
+                        Ok(UpdateSampleRange(start_epoch, end_epoch)) => {
+                            self.lines.set_epoch_range(start_epoch, end_epoch);
                         },
                         Ok(NewSampleTask(task)) => {
                             info!(?task, "Get new sample task");
@@ -67,7 +64,7 @@ impl DasStage1Miner {
                         },
                         Ok(ClosedSampleTask(hash)) => {
                             info!(?hash, "Close sample task");
-                            if current_task.map_or(false, |t| t.0.hash == hash) {
+                            if current_task.map_or(false, |t| t.0.sample_seed == hash) {
                                 current_task = None;
                             }
                         }

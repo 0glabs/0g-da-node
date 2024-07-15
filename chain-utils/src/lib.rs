@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 use ethers::providers::{Http, HttpRateLimitRetryPolicy, RetryClient, RetryClientBuilder};
+use ethers::types::H256;
 use ethers::{
     prelude::SignerMiddleware,
     providers::{Middleware, Provider},
@@ -15,10 +16,7 @@ pub type DefaultMiddlewareInner = SignerMiddleware<Provider<RetryClient<Http>>, 
 
 pub const DA_SIGNER_ADDRESS: &str = "0x0000000000000000000000000000000000001000";
 
-pub async fn make_provider(
-    eth_rpc_url: &str,
-    signer_eth_private_key: &str,
-) -> Result<DefaultMiddleware> {
+pub async fn make_provider(eth_rpc_url: &str, eth_private_key: &H256) -> Result<DefaultMiddleware> {
     let eth_rpc = Http::from_str(eth_rpc_url)?;
     let provider = Provider::new(
         RetryClientBuilder::default()
@@ -28,7 +26,7 @@ pub async fn make_provider(
             .build(eth_rpc, Box::new(HttpRateLimitRetryPolicy)),
     );
 
-    let local_wallet = LocalWallet::from_str(signer_eth_private_key)
+    let local_wallet = LocalWallet::from_bytes(&eth_private_key[..])
         .map_err(|e| anyhow!("Invalid validator private key: {:?}", e))?;
     let chain_id = provider
         .get_chainid()

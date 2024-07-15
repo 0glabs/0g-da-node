@@ -251,9 +251,7 @@ impl Signer for SignerService {
         &self,
         request: Request<Empty>,
     ) -> Result<Response<signer::StatusReply>, Status> {
-        let status = signer::StatusReply {
-            status_code: 200
-        };
+        let status = signer::StatusReply { status_code: 200 };
         Ok(Response::new(status))
     }
 }
