@@ -1,5 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
+use ethers::types::U256;
 use storage::Storage;
 use task_executor::TaskExecutor;
 use tokio::sync::{broadcast, mpsc, RwLock};
@@ -24,10 +25,8 @@ impl DasStage1Miner {
         db: Arc<RwLock<Storage>>,
         on_chain_receiver: broadcast::Receiver<OnChainChangeMessage>,
         first_stage_sender: mpsc::UnboundedSender<Vec<LineCandidate>>,
-        current_epoch: u64,
     ) {
-        let mut lines = LineMetadata::default();
-        lines.new_epoch_range(0u64..current_epoch);
+        let lines = LineMetadata::default();
 
         let stage1_miner = Self {
             db,
@@ -57,17 +56,17 @@ impl DasStage1Miner {
 
                 msg = self.on_chain_receiver.recv(), if receive_channel_opened => {
                     match msg {
-                        Ok(EpochUpdate(x)) => {
-                            info!(epoch = x, "New epoch");
-                            self.lines.new_epoch(x - 1);
+                        Ok(UpdateSampleRange(start_epoch, end_epoch)) => {
+                            self.lines.set_epoch_range(start_epoch, end_epoch);
                         },
                         Ok(NewSampleTask(task)) => {
-                            info!(?task, "Get new sample task");
+                            let tries = U256::max_value() / task.podas_target;
+                            info!(?task, ?tries, "Get new sample task");
                             current_task = Some((task, 0));
                         },
                         Ok(ClosedSampleTask(hash)) => {
                             info!(?hash, "Close sample task");
-                            if current_task.map_or(false, |t| t.0.hash == hash) {
+                            if current_task.map_or(false, |t| t.0.sample_seed == hash) {
                                 current_task = None;
                             }
                         }
@@ -91,6 +90,7 @@ impl DasStage1Miner {
                 _ = async {}, if current_task.is_some() && send_channel_opened => {
                     let (task, start_epoch) = current_task.unwrap();
                     let (filtered_lines, last_epoch) = self.lines.iter_next_epoch(start_epoch, MINE_EPOCH_BATCH, task);
+                    info!(start_epoch, last_epoch, iter_lines = filtered_lines.len(), "Stage 1 mine");
 
                     current_task = last_epoch.map(|e| (task, e + 1));
                     if !filtered_lines.is_empty() &&  self.first_stage_sender.send(filtered_lines).is_err(){

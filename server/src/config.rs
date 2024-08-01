@@ -4,7 +4,10 @@ use anyhow::{anyhow, bail, Result};
 use ark_bn254::Fr;
 
 use config::ConfigError::NotFound;
-use ethers::{abi::Address, types::H160};
+use ethers::{
+    abi::Address,
+    types::{H160, H256},
+};
 
 mod cli {
     use clap::{arg, command, Command};
@@ -35,6 +38,11 @@ impl RawConfig {
     fn get_address(&self, key: &'static str) -> Result<Address> {
         Address::from_str(&self.get_string(key)?)
             .map_err(|err| anyhow!("Cannot parse config key `{}` as address: {:?}", key, err))
+    }
+
+    fn get_bytes32(&self, key: &'static str) -> Result<H256> {
+        H256::from_str(&self.get_string(key)?)
+            .map_err(|err| anyhow!("Cannot parse config key `{}` as bytes32: {:?}", key, err))
     }
 
     fn get_bls_key(&self, key: &'static str) -> Result<Fr> {
@@ -74,7 +82,8 @@ pub struct Config {
     pub start_block_number: u64,
     pub da_entrance_address: H160,
     pub signer_bls_private_key: Fr,
-    pub signer_eth_private_key: String,
+    pub signer_eth_private_key: H256,
+    pub miner_eth_private_key: H256,
     pub data_path: String,
     pub enable_das: bool,
     pub das_test: bool,
@@ -93,6 +102,8 @@ impl Config {
             bail!(anyhow!("Config file missing!"));
         };
 
+        let enable_das = c.get_bool_opt("enable_das")?;
+
         Ok(Self {
             enable_das: c.get_bool_opt("enable_das")?,
             das_test: c.get_bool_opt("das_test")?,
@@ -106,7 +117,13 @@ impl Config {
             start_block_number: c.get_u64("start_block_number")?,
             da_entrance_address: c.get_address("da_entrance_address")?,
             signer_bls_private_key: c.get_bls_key("signer_bls_private_key")?,
-            signer_eth_private_key: c.get_string("signer_eth_private_key")?,
+            signer_eth_private_key: c.get_bytes32("signer_eth_private_key")?,
+            miner_eth_private_key: if enable_das {
+                c.get_bytes32("miner_eth_private_key")
+                    .or_else(|_| c.get_bytes32("signer_eth_private_key"))?
+            } else {
+                H256::zero()
+            },
             data_path: c.get_string("data_path")?,
         })
     }

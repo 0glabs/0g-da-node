@@ -12,6 +12,7 @@ use anyhow::{anyhow, Result};
 use chain_state::{
     da_handler::start_da_monitor, signers_handler::start_epoch_registration, ChainState,
 };
+use chain_utils::make_provider;
 use da_miner::DasMineService;
 use grpc::run_server;
 
@@ -78,9 +79,12 @@ async fn start_das_service(executor: TaskExecutor, ctx: &Context) {
     if !ctx.config.enable_das {
         return;
     }
+    let provider = make_provider(&ctx.config.eth_rpc_url, &ctx.config.miner_eth_private_key)
+        .await
+        .unwrap();
     DasMineService::spawn(
         executor,
-        ctx.provider.clone(),
+        provider,
         ctx.config.da_entrance_address,
         ctx.config.das_test,
         ctx.db.clone(),

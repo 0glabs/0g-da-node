@@ -35,12 +35,11 @@ impl DasMineService {
             mpsc::unbounded_channel::<Vec<LineCandidate>>();
         let (submission_sender, submission_receiver) = mpsc::unbounded_channel::<SampleResponse>();
 
-        let epoch_number = DasWatcher::spawn(
+        DasWatcher::spawn(
             executor.clone(),
             provider.clone(),
             on_chain_sender,
             da_address,
-            das_test,
         )
         .await?;
 
@@ -49,7 +48,6 @@ impl DasMineService {
             store.clone(),
             on_chain_receiver.resubscribe(),
             first_stage_sender,
-            epoch_number,
         );
 
         DasStage2Miner::spawn(

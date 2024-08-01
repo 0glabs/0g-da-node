@@ -69,7 +69,7 @@ impl LineCandidate {
             ));
 
             let final_quality = self.line_quality.checked_add(data_quality);
-            if final_quality.map_or(true, |x| x > self.task.quality) {
+            if final_quality.map_or(true, |x| x > self.task.podas_target) {
                 continue;
             }
 
@@ -144,7 +144,7 @@ impl LineCandidate {
                     data: serialize_line(&hit.data).into(),
                     blob_roots: light_slice.merkle_root,
                     proof,
-                    sample_height: self.task.height,
+                    sample_seed: self.task.sample_seed.0,
                 }
             })
             .collect();

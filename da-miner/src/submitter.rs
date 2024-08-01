@@ -1,6 +1,6 @@
 use chain_utils::{DefaultMiddleware, DefaultMiddlewareInner};
 use contract_interface::{da_sample::SampleResponse, DASample};
-use ethers::{abi::Address, contract::ContractCall, providers::PendingTransaction};
+use ethers::{abi::Address, contract::ContractCall, providers::PendingTransaction, utils::hex};
 use task_executor::TaskExecutor;
 use tokio::sync::{broadcast, mpsc};
 
@@ -48,7 +48,7 @@ impl DasSubmitter {
                             current_task = Some(task);
                         },
                         Ok(ClosedSampleTask(hash)) => {
-                            if current_task.map_or(false, |t| t.hash == hash) {
+                            if current_task.map_or(false, |t| t.sample_seed == hash) {
                                 current_task = None;
                             }
                         },
@@ -70,7 +70,7 @@ impl DasSubmitter {
                     }
 
                     let response = msg.unwrap();
-                    if response.sample_height == current_task.unwrap().height {
+                    if response.sample_seed == current_task.unwrap().sample_seed.0 {
                         let _ = self.submit_response(response).await;
                     }
                 }
@@ -80,7 +80,30 @@ impl DasSubmitter {
 
     async fn submit_response(&self, response: SampleResponse) -> Result<(), ()> {
         info_span!("submit_response");
-        info!("Start response submission");
+        info!(
+            epoch = response.epoch,
+            quorum = response.quorum_id,
+            data_root = hex::encode(response.data_root),
+            "Start response submission"
+        );
+
+        let commitment_exists = self
+            .da_contract
+            .commitment_exists(
+                response.data_root,
+                response.epoch.into(),
+                response.quorum_id.into(),
+            )
+            .call()
+            .await
+            .map_err(|e| {
+                warn!(error = ?e, "Fail to check commitment exists");
+            })?;
+
+        if !commitment_exists {
+            info!("Give up submission because of non-existent data root");
+            return Err(());
+        }
 
         let submission_call: ContractCall<_, _> =
             self.da_contract.submit_sampling_response(response).legacy();
