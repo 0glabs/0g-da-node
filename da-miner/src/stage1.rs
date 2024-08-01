@@ -1,5 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
+use ethers::types::U256;
 use storage::Storage;
 use task_executor::TaskExecutor;
 use tokio::sync::{broadcast, mpsc, RwLock};
@@ -59,7 +60,8 @@ impl DasStage1Miner {
                             self.lines.set_epoch_range(start_epoch, end_epoch);
                         },
                         Ok(NewSampleTask(task)) => {
-                            info!(?task, "Get new sample task");
+                            let tries = U256::max_value() / task.podas_target;
+                            info!(?task, ?tries, "Get new sample task");
                             current_task = Some((task, 0));
                         },
                         Ok(ClosedSampleTask(hash)) => {
@@ -88,6 +90,7 @@ impl DasStage1Miner {
                 _ = async {}, if current_task.is_some() && send_channel_opened => {
                     let (task, start_epoch) = current_task.unwrap();
                     let (filtered_lines, last_epoch) = self.lines.iter_next_epoch(start_epoch, MINE_EPOCH_BATCH, task);
+                    info!(start_epoch, last_epoch, iter_lines = filtered_lines.len(), "Stage 1 mine");
 
                     current_task = last_epoch.map(|e| (task, e + 1));
                     if !filtered_lines.is_empty() &&  self.first_stage_sender.send(filtered_lines).is_err(){

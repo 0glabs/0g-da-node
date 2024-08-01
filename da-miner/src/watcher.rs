@@ -100,6 +100,8 @@ impl DasWatcher {
             end_epoch,
         } = range_res.map_err(|e| format!("Failed to query sample range: {:?}", e))?;
 
+        debug!(?sample_context, start_epoch, end_epoch, "On-chain status");
+
         let last_status = self.last_status.as_ref();
 
         if last_status.map_or(true, |x| x.sample_range != (start_epoch, end_epoch)) {

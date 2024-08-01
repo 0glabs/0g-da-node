@@ -77,6 +77,7 @@ impl LineMetadata {
         num_batch: usize,
         task: SampleTask,
     ) -> (Vec<LineCandidate>, Option<u64>) {
+        debug!(start_epoch, "DA data size {}", self.data.len());
         if self
             .data
             .last_key_value()
@@ -91,6 +92,8 @@ impl LineMetadata {
         let mut max_quality = [0u8; 32];
         task.podas_target.to_big_endian(&mut max_quality);
 
+        let mut cnt = 0usize;
+
         for (&epoch, blobs) in self.data.range(start_epoch..).take(num_batch) {
             for blob in blobs.iter() {
                 let quorum_id = blob.quorum_id;
@@ -103,6 +106,7 @@ impl LineMetadata {
                         storage_root,
                         index,
                     );
+                    cnt += 1;
                     if line_quality <= max_quality {
                         answer.push(LineCandidate::new(
                             SliceIndex {
@@ -119,6 +123,8 @@ impl LineMetadata {
             }
             last_epoch = epoch;
         }
+
+        debug!("{:?} lines processed", cnt);
 
         (answer, Some(last_epoch))
     }

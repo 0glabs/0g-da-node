@@ -1,6 +1,6 @@
 use chain_utils::{DefaultMiddleware, DefaultMiddlewareInner};
 use contract_interface::{da_sample::SampleResponse, DASample};
-use ethers::{abi::Address, contract::ContractCall, providers::PendingTransaction};
+use ethers::{abi::Address, contract::ContractCall, providers::PendingTransaction, utils::hex};
 use task_executor::TaskExecutor;
 use tokio::sync::{broadcast, mpsc};
 
@@ -80,7 +80,12 @@ impl DasSubmitter {
 
     async fn submit_response(&self, response: SampleResponse) -> Result<(), ()> {
         info_span!("submit_response");
-        info!("Start response submission");
+        info!(
+            epoch = response.epoch,
+            quorum = response.quorum_id,
+            data_root = hex::encode(response.data_root),
+            "Start response submission"
+        );
 
         let commitment_exists = self
             .da_contract
