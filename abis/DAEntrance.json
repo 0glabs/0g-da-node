@@ -65,6 +65,12 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "bytes32",
         "name": "dataRoot",
         "type": "bytes32"
@@ -1055,6 +1061,19 @@
   {
     "inputs": [],
     "name": "sync",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_times",
+        "type": "uint256"
+      }
+    ],
+    "name": "syncFixedTimes",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
