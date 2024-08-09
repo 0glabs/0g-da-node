@@ -56,8 +56,8 @@ async fn check_da_logs(chain_state: Arc<ChainState>) -> Result<()> {
                         from, to
                     );
                     check_data_logs(chain_state.clone(), from, to).await?;
+                    chain_state.db.write().await.put_progress(to + 1).await?;
                 }
-                chain_state.db.write().await.put_progress(to + 1).await?;
             } else {
                 bail!(anyhow!("block number is empty"));
             }
