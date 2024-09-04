@@ -27,4 +27,4 @@ signer_eth_private_key = ""
 miner_eth_private_key = ""
 
 # whether to enable data availability sampling
-enable_das = "false"
+enable_das = "true"
