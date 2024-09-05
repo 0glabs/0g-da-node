@@ -251,7 +251,10 @@ impl Signer for SignerService {
         &self,
         request: Request<Empty>,
     ) -> Result<Response<signer::StatusReply>, Status> {
-        let status = signer::StatusReply { status_code: 200 };
+        let status = signer::StatusReply {
+            status_code: 200,
+            entrance_contract: hex::encode(self.chain_state.da_entrance.address()),
+        };
         Ok(Response::new(status))
     }
 }

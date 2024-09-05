@@ -58,6 +58,7 @@ message BatchRetrieveReply {
 
 message StatusReply {
   uint64 status_code = 1;
+  string entrance_contract = 2;
 }
 
 message Empty {}
