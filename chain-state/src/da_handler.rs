@@ -11,7 +11,7 @@ use storage::{
 };
 use tokio::time::sleep;
 
-const MAX_LOGS_PAGINATION: u64 = 1000;
+const MAX_LOGS_PAGINATION: u64 = 100;
 
 pub async fn start_da_monitor(chain_state: Arc<ChainState>, start_block_number: u64) -> Result<()> {
     let maybe_progress = chain_state.db.read().await.get_progress().await?;
