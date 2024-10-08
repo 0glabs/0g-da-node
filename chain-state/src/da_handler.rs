@@ -31,7 +31,7 @@ pub async fn start_da_monitor(chain_state: Arc<ChainState>, start_block_number: 
             match check_da_logs(chain_state.clone()).await {
                 Ok(_) => {}
                 Err(e) => {
-                    error!("poll check_new_epoch error: {:?}", e);
+                    error!("poll da logs error: {:?}", e);
                 }
             }
             sleep(Duration::from_secs(5)).await;
