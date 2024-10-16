@@ -138,14 +138,64 @@ impl ChainState {
                     Ok(success) => {
                         if success {
                             info!("signer registered");
-                            return Ok(());
+                            sleep(Duration::from_secs(10)).await;
+                        } else {
+                            bail!(anyhow!("register signer failed"));
                         }
-                        bail!(anyhow!("register signer failed"));
                     }
                     Err(e) => {
                         bail!(anyhow!(e));
                     }
                 }
+            }
+        }
+        match self
+            .da_signers
+            .get_signer(vec![self.signer_address])
+            .call()
+            .await?
+            .get(0)
+        {
+            Some(signer_detail) => {
+                if signer_detail.socket != socket {
+                    info!(
+                        "change socket of signer from {:?} to {:?}",
+                        signer_detail.socket, socket
+                    );
+                    let input_data = self
+                        .da_signers
+                        .update_socket(socket.clone())
+                        .calldata()
+                        .unwrap();
+                    let tx_request = TransactionRequest::new()
+                        .to(self.da_signers.address())
+                        .data(input_data);
+
+                    match self
+                        .transactor
+                        .lock()
+                        .await
+                        .send(
+                            tx_request,
+                            TransactionInfo::UpdateSocket(self.signer_address, socket.clone()),
+                        )
+                        .await
+                    {
+                        Ok(success) => {
+                            if success {
+                                info!("socket updated to {:?}", socket.clone());
+                                return Ok(());
+                            }
+                            bail!(anyhow!("update socket failed"));
+                        }
+                        Err(e) => {
+                            bail!(anyhow!(e));
+                        }
+                    }
+                }
+            }
+            None => {
+                bail!("cannot get signer from precompile!")
             }
         }
         Ok(())
