@@ -12,6 +12,7 @@ use ethers::{
 pub enum TransactionInfo {
     RegisterSigner(H160),
     RegisterEpoch(H160, u64),
+    UpdateSocket(H160, String),
 }
 
 pub struct Transactor {
