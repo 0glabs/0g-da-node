@@ -1,62 +1,36 @@
-# 0g-DA-signer
+# 0G Data Availability Node
 
-## Download Encoding Params
+## Overview
 
-Download verifier params before running server by
-```sh
-./dev_support/download_params.sh
-```
+0G DA is a modular data availability layer designed for high-performance and high-throughput chains and rollups, particularly in AI and gaming. 
 
-## Configuration
 
-Create a `config.toml` file and set the following field to proper values:
-```
-log_level = "info"
+## Architecture
 
-data_path = "./db/"
+0G DA consists of the following modules:
 
-# path to downloaded params folder
-encoder_params_dir = "params/" 
+1. Data Availability Nodes and Signers on the DA network
+2. Data Availability Clients and Encoders on the rollup/appchain side for data dispersion
 
-# grpc server listen address
-grpc_listen_address = "0.0.0.0:34000"
-# chain eth rpc endpoint
-eth_rpc_endpoint = ""
-# public grpc service socket address to register in DA contract
-# ip:34000 (keep same port as the grpc listen address)
-# or if you have dns, fill your dns
-socket_address = "<public_ip/dns>"
+Across the two sets of nodes, 0G DA supports the following features:
 
-# data availability contract to interact with
-da_entrance_address = ""
-# deployed block number of da entrance contract
-start_block_number = 0 
+- **Erasure Coding**: Data is split into chunks and distributed across Storage Nodes.
+- **KZG Commitments**: Uses the AMT protocol to reduce overhead when verifying KZG commitments.
+- **Verifiable Random Function (VRF)**: Ensures unpredictable and verifiable selection of DA Nodes for availability sampling.
+- **Quorum-based and Sampling-basedVerification**: Small groups of DA nodes work together to check and efficiently verify stored data.
+- **Separate Validator Network**: Validators finalize proofs submitted by DA nodes.
 
-# signer BLS private key
-signer_bls_private_key = ""
-# signer eth account private key
-signer_eth_private_key = ""
-# miner eth account private key, (could be the same as `signer_eth_private_key`, but not recommended)
-miner_eth_private_key = ""
+For in-depth technical details about 0G DA, please read our [Intro to 0G DA](https://0g-doc-new.vercel.app/og-da).
 
-# whether to enable data availability sampling
-enable_das = "true"
-```
+## Documentation
 
-# Build from source
-```
-cargo build --release
-./target/release/server --config config.toml
-```
+- If you want to run a node, please refer to the [Running a Node](https://0g-doc-new.vercel.app/run-a-node/da-node) guide.
+- If you learn more about 0G DA, please refer to the [Intro to 0G DA](https://0g-doc-new.vercel.app/og-da) guide.
+- If you want build a rollup with 0G, please refer to the [Building a Rollup](https://0g-doc-new.vercel.app/build-with-0g/rollups-and-appchains/op-stack-on-0g-da) guide.
 
-# Run in Docker
-set following fields in your `config.toml`:
-```
-data_path = "/data"
-encoder_params_dir = "/params"
-```
-build docker image and run:
-```
-docker build -t 0g-da-node .
-docker run -d -v <YOUR_DATA_FOLDER>:/data -v <YOUR_CONFIG_TOML>:/config.toml --name <CONTAINER_NAME> --net=host 0g-da-node
-```
+## Support and Additional Resources
+We want to do everything we can to help you be successful while working on your contribution and projects. Here you'll find various resources and communities that may help you complete a project or contribute to 0G. 
+
+### Communities
+- [0G Telegram](https://t.me/web3_0glabs)
+- [0G Discord](https://discord.com/invite/0glabs)
