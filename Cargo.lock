@@ -698,6 +698,7 @@ dependencies = [
  "ethers",
  "hex",
  "num-bigint",
+ "reqwest",
  "storage",
  "tokio",
  "tracing",
@@ -711,6 +712,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "ethers",
+ "reqwest",
 ]
 
 [[package]]

@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -10,6 +9,7 @@ use ethers::{
     providers::{Middleware, Provider},
     signers::{LocalWallet, Signer},
 };
+use reqwest::Url;
 
 pub type DefaultMiddleware = Arc<DefaultMiddlewareInner>;
 pub type DefaultMiddlewareInner = SignerMiddleware<Provider<RetryClient<Http>>, LocalWallet>;
@@ -17,13 +17,12 @@ pub type DefaultMiddlewareInner = SignerMiddleware<Provider<RetryClient<Http>>, 
 pub const DA_SIGNER_ADDRESS: &str = "0x0000000000000000000000000000000000001000";
 
 pub async fn make_provider(eth_rpc_url: &str, eth_private_key: &H256) -> Result<DefaultMiddleware> {
-    let eth_rpc = Http::from_str(eth_rpc_url)?;
+    let client = reqwest::ClientBuilder::default()
+        .timeout(Duration::from_secs(60))
+        .build()?;
+    let http_client = Http::new_with_client(Url::parse(eth_rpc_url)?, client);
     let provider = Provider::new(
-        RetryClientBuilder::default()
-            .rate_limit_retries(100)
-            .timeout_retries(100)
-            .initial_backoff(Duration::from_millis(500))
-            .build(eth_rpc, Box::new(HttpRateLimitRetryPolicy)),
+        RetryClientBuilder::default().build(http_client, Box::new(HttpRateLimitRetryPolicy)),
     );
 
     let local_wallet = LocalWallet::from_bytes(&eth_private_key[..])

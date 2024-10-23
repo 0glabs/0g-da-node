@@ -154,7 +154,7 @@ impl ChainState {
             .get_signer(vec![self.signer_address])
             .call()
             .await?
-            .get(0)
+            .first()
         {
             Some(signer_detail) => {
                 if signer_detail.socket != socket {
