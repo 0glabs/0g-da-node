@@ -202,6 +202,10 @@ impl ChainState {
     }
 
     pub async fn fetch_quorum_if_missing(&self, epoch: u64) -> Result<u64> {
+        let max_epoch = (self.da_signers.epoch_number().call().await?).as_u64();
+        if max_epoch < epoch {
+            bail!(anyhow!("invalid epoch"));
+        }
         let maybe_quorum_num = self.db.read().await.get_quorum_num(epoch).await?;
         match maybe_quorum_num {
             Some(cnt) => Ok(cnt),
