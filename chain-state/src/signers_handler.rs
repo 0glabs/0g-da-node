@@ -138,9 +138,10 @@ impl ChainState {
                     Ok(success) => {
                         if success {
                             info!("signer registered");
-                            return Ok(());
+                            sleep(Duration::from_secs(10)).await;
+                        } else {
+                            bail!(anyhow!("register signer failed"));
                         }
-                        bail!(anyhow!("register signer failed"));
                     }
                     Err(e) => {
                         bail!(anyhow!(e));
@@ -148,10 +149,63 @@ impl ChainState {
                 }
             }
         }
+        match self
+            .da_signers
+            .get_signer(vec![self.signer_address])
+            .call()
+            .await?
+            .first()
+        {
+            Some(signer_detail) => {
+                if signer_detail.socket != socket {
+                    info!(
+                        "change socket of signer from {:?} to {:?}",
+                        signer_detail.socket, socket
+                    );
+                    let input_data = self
+                        .da_signers
+                        .update_socket(socket.clone())
+                        .calldata()
+                        .unwrap();
+                    let tx_request = TransactionRequest::new()
+                        .to(self.da_signers.address())
+                        .data(input_data);
+
+                    match self
+                        .transactor
+                        .lock()
+                        .await
+                        .send(
+                            tx_request,
+                            TransactionInfo::UpdateSocket(self.signer_address, socket.clone()),
+                        )
+                        .await
+                    {
+                        Ok(success) => {
+                            if success {
+                                info!("socket updated to {:?}", socket.clone());
+                                return Ok(());
+                            }
+                            bail!(anyhow!("update socket failed"));
+                        }
+                        Err(e) => {
+                            bail!(anyhow!(e));
+                        }
+                    }
+                }
+            }
+            None => {
+                bail!("cannot get signer from precompile!")
+            }
+        }
         Ok(())
     }
 
     pub async fn fetch_quorum_if_missing(&self, epoch: u64) -> Result<u64> {
+        let max_epoch = (self.da_signers.epoch_number().call().await?).as_u64();
+        if max_epoch < epoch {
+            bail!(anyhow!("invalid epoch"));
+        }
         let maybe_quorum_num = self.db.read().await.get_quorum_num(epoch).await?;
         match maybe_quorum_num {
             Some(cnt) => Ok(cnt),

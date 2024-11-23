@@ -15,6 +15,7 @@ use ethers::{
     providers::{Http, HttpRateLimitRetryPolicy, Provider, RetryClient, RetryClientBuilder},
     types::H160,
 };
+use reqwest::Url;
 use storage::Storage;
 use tokio::sync::{Mutex, RwLock};
 use transactor::Transactor;
@@ -35,15 +36,12 @@ impl ChainState {
         transactor: Arc<Mutex<Transactor>>,
         db: Arc<RwLock<Storage>>,
     ) -> Result<Self> {
+        let client = reqwest::ClientBuilder::default()
+            .timeout(Duration::from_secs(60))
+            .build()?;
+        let http_client = Http::new_with_client(Url::parse(eth_rpc_url)?, client);
         let provider = Arc::new(Provider::new(
-            RetryClientBuilder::default()
-                .rate_limit_retries(100)
-                .timeout_retries(100)
-                .initial_backoff(Duration::from_millis(500))
-                .build(
-                    Http::from_str(eth_rpc_url)?,
-                    Box::new(HttpRateLimitRetryPolicy),
-                ),
+            RetryClientBuilder::default().build(http_client, Box::new(HttpRateLimitRetryPolicy)),
         ));
         let da_entrance = Arc::new(DAEntrance::new(da_entrance_address, provider.clone()));
         let da_signers = Arc::new(DASigners::new(

@@ -84,7 +84,7 @@ impl SignerService {
         let request_content = request.into_inner();
         let ts = Instant::now();
 
-        info!(?remote_addr, "Received request");
+        info!(?remote_addr, "Received sign request");
         let mut reply = BatchSignReply { signatures: vec![] };
 
         for req in request_content.requests.iter() {
@@ -152,7 +152,7 @@ impl SignerService {
         let request_content = request.into_inner();
         let ts = Instant::now();
 
-        info!(?remote_addr, "Received request");
+        info!(?remote_addr, "Received retrieve request");
         let mut reply = BatchRetrieveReply {
             encoded_slice: vec![],
         };
