@@ -3235,6 +3235,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "106dd99e98437432fed6519dedecfade6a06a73bb7b2a1e019fdd2bee5778d94"
 
 [[package]]
+name = "pruner"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chain-state",
+ "ethers",
+ "once_cell",
+ "storage",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "utils",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3826,6 +3842,7 @@ dependencies = [
  "futures",
  "grpc",
  "num-bigint",
+ "pruner",
  "rayon",
  "storage",
  "task_executor",

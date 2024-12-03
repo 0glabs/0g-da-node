@@ -14,7 +14,7 @@ use tokio::time::sleep;
 const MAX_LOGS_PAGINATION: u64 = 100;
 
 pub async fn start_da_monitor(chain_state: Arc<ChainState>, start_block_number: u64) -> Result<()> {
-    let maybe_progress = chain_state.db.read().await.get_progress().await?;
+    let maybe_progress = chain_state.db.read().await.get_sync_progress().await?;
     match maybe_progress {
         Some(_) => {}
         None => {
@@ -22,7 +22,7 @@ pub async fn start_da_monitor(chain_state: Arc<ChainState>, start_block_number: 
                 .db
                 .write()
                 .await
-                .put_progress(start_block_number)
+                .put_sync_progress(start_block_number)
                 .await?;
         }
     }
@@ -41,7 +41,13 @@ pub async fn start_da_monitor(chain_state: Arc<ChainState>, start_block_number: 
 }
 
 async fn check_da_logs(chain_state: Arc<ChainState>) -> Result<()> {
-    let from = chain_state.db.read().await.get_progress().await?.unwrap();
+    let from = chain_state
+        .db
+        .read()
+        .await
+        .get_sync_progress()
+        .await?
+        .unwrap();
     match chain_state
         .provider
         .get_block(BlockNumber::Finalized)
@@ -56,7 +62,12 @@ async fn check_da_logs(chain_state: Arc<ChainState>) -> Result<()> {
                         from, to
                     );
                     check_data_logs(chain_state.clone(), from, to).await?;
-                    chain_state.db.write().await.put_progress(to + 1).await?;
+                    chain_state
+                        .db
+                        .write()
+                        .await
+                        .put_sync_progress(to + 1)
+                        .await?;
                 }
             } else {
                 bail!(anyhow!("block number is empty"));

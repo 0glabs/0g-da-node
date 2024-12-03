@@ -10,7 +10,8 @@ members = [
 	"client",
 	"da-miner",
 	"chain-utils",
-	"key-gen"
+	"key-gen",
+	"pruner"
 ]
 
 [workspace.dependencies]
@@ -23,6 +24,7 @@ utils = { path = "./utils" }
 client = { paht = "./client" }
 chain-utils = { path = "./chain-utils"}
 da-miner = { path = "./da-miner" }
+pruner = { path = "./pruner" }
 
 zg-encoder = { git = "https://github.com/0glabs/0g-da-encoder.git", rev = "6d5bac1", features = ["parallel"]}
 # zg-encoder = { path = "../0g-da-encoder/crates/encoder", features = ["parallel"]}

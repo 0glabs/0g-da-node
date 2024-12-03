@@ -15,6 +15,7 @@ use chain_state::{
 use chain_utils::make_provider;
 use da_miner::DasMineService;
 use grpc::run_server;
+use pruner::run_pruner;
 
 use runtime::Environment;
 use task_executor::TaskExecutor;
@@ -48,6 +49,17 @@ async fn start_grpc_server(chain_state: Arc<ChainState>, ctx: &Context) -> Resul
     Ok(())
 }
 
+async fn start_pruner(chain_state: Arc<ChainState>, ctx: &Context) -> Result<()> {
+    let db = ctx.db.clone();
+    tokio::spawn(async move {
+        run_pruner(db, chain_state)
+            .await
+            .map_err(|e| anyhow!(e.to_string()))
+            .unwrap();
+    });
+    Ok(())
+}
+
 async fn setup_chain_state(ctx: &Context) -> Result<Arc<ChainState>> {
     let chain_state = Arc::new(
         ChainState::new(
@@ -72,6 +84,7 @@ async fn setup_chain_state(ctx: &Context) -> Result<Arc<ChainState>> {
 async fn start_server(ctx: &Context) -> Result<()> {
     let chain_state = setup_chain_state(ctx).await?;
     start_grpc_server(chain_state.clone(), ctx).await?;
+    start_pruner(chain_state.clone(), ctx).await?;
     Ok(())
 }
 

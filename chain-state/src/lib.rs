@@ -23,7 +23,7 @@ use transactor::Transactor;
 pub struct ChainState {
     provider: Arc<Provider<RetryClient<Http>>>,
     pub da_entrance: Arc<DAEntrance<Provider<RetryClient<Http>>>>,
-    da_signers: Arc<DASigners<Provider<RetryClient<Http>>>>,
+    pub da_signers: Arc<DASigners<Provider<RetryClient<Http>>>>,
     transactor: Arc<Mutex<Transactor>>,
     signer_address: H160,
     db: Arc<RwLock<Storage>>,
