@@ -5,7 +5,7 @@ use anyhow::Result;
 use async_trait::async_trait;
 
 const SYNC_PROGRESS_KEY: &[u8] = &[0];
-const PRUNE_PROGRESS_KEY: &[u8] = &[0];
+const PRUNE_PROGRESS_KEY: &[u8] = &[1];
 
 #[async_trait]
 pub trait MiscDB {
