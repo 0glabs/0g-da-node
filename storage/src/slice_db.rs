@@ -81,6 +81,8 @@ pub trait SliceDB {
     ) -> Result<()>;
 
     async fn get_epoch_info(&self, epoch: u64) -> Result<BTreeSet<BlobInfo>>;
+
+    async fn prune(&self, epoch: u64) -> Result<()>;
 }
 
 #[async_trait]
@@ -233,5 +235,19 @@ impl SliceDB for Storage {
         }
 
         Ok(answer)
+    }
+
+    async fn prune(&self, epoch: u64) -> Result<()> {
+        let blob_prefix: Vec<u8> = once(BLOB_PREFIX).chain(epoch.to_be_bytes()).collect();
+        let slice_prefix: Vec<u8> = once(SLICE_PREFIX).chain(epoch.to_be_bytes()).collect();
+        let data_prefix: Vec<u8> = once(DATA_PREFIX).chain(epoch.to_be_bytes()).collect();
+
+        let mut tx = self.db.transaction();
+        tx.delete_prefix(COL_SLICE, &blob_prefix);
+        tx.delete_prefix(COL_SLICE, &slice_prefix);
+        tx.delete_prefix(COL_SLICE, &data_prefix);
+
+        self.db.write(tx)?;
+        Ok(())
     }
 }

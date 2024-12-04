@@ -15,6 +15,7 @@ tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
 storage = { workspace = true }
 grpc = { workspace = true }
+pruner = { workspace = true }
 chain-state = { workspace = true }
 chain-utils = { workspace = true }
 ark-ec = "0.4"
