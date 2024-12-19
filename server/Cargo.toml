@@ -29,3 +29,4 @@ task_executor = { workspace = true }
 futures = "0.3.21"
 exit-future = "0.2.0"
 da-miner = { workspace = true }
+prometheus_exporter = "0.8.5"

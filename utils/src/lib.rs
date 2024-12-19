@@ -1,3 +1,5 @@
+pub mod metrics;
+
 use ark_bn254::{Fq, FqConfig, G1Affine};
 
 use ark_ff::{BigInt, Field, MontConfig, One};

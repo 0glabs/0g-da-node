@@ -87,6 +87,7 @@ pub struct Config {
     pub data_path: String,
     pub enable_das: bool,
     pub das_test: bool,
+    pub prometheus_exporter_address: String,
 }
 
 impl Config {
@@ -125,6 +126,7 @@ impl Config {
                 H256::zero()
             },
             data_path: c.get_string("data_path")?,
+            prometheus_exporter_address: c.get_string("prometheus_exporter_address")?,
         })
     }
 }

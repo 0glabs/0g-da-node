@@ -23,7 +23,7 @@ use storage::Storage;
 use tokio::sync::RwLock;
 use tonic::metadata::KeyAndMutValueRef;
 use tonic::{Code, Request, Response, Status};
-use utils::map_to_g1;
+use utils::{map_to_g1, metrics};
 use zg_encoder::{DeferredVerifier, EncodedSlice, ZgEncoderParams, ZgSignerParams};
 
 use self::signer::SignRequest;
@@ -82,6 +82,7 @@ impl SignerService {
     ) -> Result<Response<BatchSignReply>, Status> {
         let remote_addr = request.remote_addr();
         let request_content = request.into_inner();
+        metrics::GRPC_REQ_GAUGE.set(request_content.encoded_len() as f64);
         let ts = Instant::now();
 
         info!(?remote_addr, "Received sign request");
@@ -235,7 +236,16 @@ impl Signer for SignerService {
         request: Request<BatchSignRequest>,
     ) -> Result<Response<BatchSignReply>, Status> {
         self.on_incoming_batch_sign().await?;
+        metrics::GRPC_RQE_COUNTER
+            .with_label_values(&["batch_sign"])
+            .inc();
+        let timer = metrics::GRPC_REQ_HISTOGRAM
+            .with_label_values(&["batch_sign"])
+            .start_timer();
+
         let reply = self.batch_sign_inner(request).await;
+        timer.observe_duration();
+
         self.on_complete_batch_sign().await;
         reply
     }
@@ -244,17 +254,33 @@ impl Signer for SignerService {
         &self,
         request: Request<BatchRetrieveRequest>,
     ) -> Result<Response<BatchRetrieveReply>, Status> {
-        self.batch_retrieve_inner(request).await
+        metrics::GRPC_RQE_COUNTER
+            .with_label_values(&["batch_retrieve"])
+            .inc();
+
+        let timer = metrics::GRPC_REQ_HISTOGRAM
+            .with_label_values(&["batch_retrieve"])
+            .start_timer();
+        let resp = self.batch_retrieve_inner(request).await;
+        timer.observe_duration();
+        resp
     }
 
     async fn get_status(
         &self,
         request: Request<Empty>,
     ) -> Result<Response<signer::StatusReply>, Status> {
+        metrics::GRPC_RQE_COUNTER
+            .with_label_values(&["get_status"])
+            .inc();
+        let timer = metrics::GRPC_REQ_HISTOGRAM
+            .with_label_values(&["get_status"])
+            .start_timer();
         let status = signer::StatusReply {
             status_code: 200,
             entrance_contract: hex::encode(self.chain_state.da_entrance.address()),
         };
+        timer.observe_duration();
         Ok(Response::new(status))
     }
 }

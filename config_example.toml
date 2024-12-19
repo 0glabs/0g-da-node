@@ -28,3 +28,5 @@ miner_eth_private_key = ""
 
 # whether to enable data availability sampling
 enable_das = "true"
+
+prometheus_exporter_address = "0.0.0.0:9184"

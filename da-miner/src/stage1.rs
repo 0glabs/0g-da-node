@@ -4,6 +4,7 @@ use ethers::types::U256;
 use storage::Storage;
 use task_executor::TaskExecutor;
 use tokio::sync::{broadcast, mpsc, RwLock};
+use utils::metrics;
 
 use crate::{
     line_candidate::LineCandidate,
@@ -89,7 +90,9 @@ impl DasStage1Miner {
 
                 _ = async {}, if current_task.is_some() && send_channel_opened => {
                     let (task, start_epoch) = current_task.unwrap();
+                    let timer = metrics::MINER_HISTOGRAM.with_label_values(&["stage1"]).start_timer();
                     let (filtered_lines, last_epoch) = self.lines.iter_next_epoch(start_epoch, MINE_EPOCH_BATCH, task);
+                    timer.observe_duration();
                     info!(start_epoch, last_epoch, iter_lines = filtered_lines.len(), "Stage 1 mine");
 
                     current_task = last_epoch.map(|e| (task, e + 1));
