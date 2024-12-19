@@ -7,6 +7,7 @@ use storage::Storage;
 use task_executor::TaskExecutor;
 use tokio::sync::mpsc;
 use tokio::sync::RwLock;
+use utils::metrics;
 
 use crate::line_candidate::LineCandidate;
 
@@ -79,6 +80,9 @@ impl DasStage2Miner {
         line_candidates: &mut BinaryHeap<LineCandidate>,
     ) -> Result<(), String> {
         while let Some(candidate) = line_candidates.pop() {
+            let timer = metrics::MINER_HISTOGRAM
+                .with_label_values(&["stage2"])
+                .start_timer();
             for sample_response in candidate.mine(db).await? {
                 info!("Hit a valid answer");
                 if self.submission_sender.send(sample_response).is_err() {
@@ -86,6 +90,7 @@ impl DasStage2Miner {
                     return Err("Submission channel closed".to_string());
                 }
             }
+            timer.observe_duration();
         }
         Ok(())
     }

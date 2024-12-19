@@ -17,6 +17,7 @@ use da_miner::DasMineService;
 use grpc::run_server;
 use pruner::run_pruner;
 
+use prometheus_exporter::Exporter;
 use runtime::Environment;
 use task_executor::TaskExecutor;
 use tracing::Level;
@@ -107,6 +108,15 @@ async fn start_das_service(executor: TaskExecutor, ctx: &Context) {
     info!("DA sampling mine service started");
 }
 
+async fn start_metrics_exporter(ctx: &Context) -> Result<Exporter> {
+    Ok(prometheus_exporter::start(
+        ctx.config
+            .prometheus_exporter_address
+            .parse()
+            .expect("failed to parse binding"),
+    )?)
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     // enable backtraces
     std::env::set_var("RUST_BACKTRACE", "1");
@@ -148,7 +158,11 @@ async fn async_main(
             .build_global()?;
     }
 
-    let (_das_res, rpc_res) = tokio::join!(start_das_service(executor, &ctx), start_server(&ctx));
+    let (_das_res, rpc_res, _exporter) = tokio::join!(
+        start_das_service(executor, &ctx),
+        start_server(&ctx),
+        start_metrics_exporter(&ctx)
+    );
 
     if !ctx.config.das_test {
         rpc_res?;

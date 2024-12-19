@@ -16,7 +16,7 @@ use ethers::{
 use storage::quorum_db::{AssignedSlices, QuorumDB};
 
 use tokio::time::sleep;
-use utils::{left_pad_zeros, map_to_g1};
+use utils::{left_pad_zeros, map_to_g1, metrics};
 
 use crate::{transactor::TransactionInfo, ChainState};
 
@@ -218,6 +218,7 @@ impl ChainState {
                     .await?)
                     .as_u32() as i32;
                 let mut assigned = vec![];
+                metrics::EPOCH_QUORUMS.set(quorum_cnt as i64);
                 for i in 0..quorum_cnt {
                     let quorum = self
                         .da_signers
@@ -326,6 +327,7 @@ async fn check_new_registration(
                 Ok(success) => {
                     if success {
                         info!("epoch {:?} registered", next_epoch);
+                        metrics::REGISTERED_EPOCH.set(next_epoch as f64);
                         return Ok(());
                     }
                     bail!(anyhow!(format!("register epoch {:?} failed", next_epoch)));

@@ -16,3 +16,5 @@ ark-bn254 = "0.4"
 ark-ff = "0.4"
 ark-serialize = "0.4"
 num-bigint = { version = "0.4", default-features = false }
+prometheus = "0.13"
+lazy_static = "1.5.0"
