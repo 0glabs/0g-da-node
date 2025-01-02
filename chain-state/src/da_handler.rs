@@ -10,6 +10,7 @@ use storage::{
     misc_db::MiscDB,
 };
 use tokio::time::sleep;
+use utils::metrics;
 
 const MAX_LOGS_PAGINATION: u64 = 100;
 
@@ -62,6 +63,7 @@ async fn check_da_logs(chain_state: Arc<ChainState>) -> Result<()> {
                         from, to
                     );
                     check_data_logs(chain_state.clone(), from, to).await?;
+                    metrics::CHAIN_PROGRESS.set(to as f64);
                     chain_state
                         .db
                         .write()
