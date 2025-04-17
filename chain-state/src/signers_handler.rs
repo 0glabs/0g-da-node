@@ -5,7 +5,7 @@ use ark_bn254::{g1, g2, Fr, G1Affine, G2Affine};
 use ark_ec::{AffineRepr, CurveGroup};
 
 use ark_serialize::CanonicalSerialize;
-use contract_interface::da_signers::{G1Point, G2Point, SignerDetail};
+use contract_interface::da_registry::{G1Point, G2Point, SignerDetail};
 
 use ethers::{
     providers::Middleware,
@@ -103,7 +103,7 @@ impl ChainState {
             );
             let signature = (hash * signer_bls_private_key).into_affine();
             let maybe_input_data = self
-                .da_signers
+                .da_registry
                 .register_signer(
                     SignerDetail {
                         signer: self.signer_address,
@@ -302,7 +302,7 @@ async fn check_new_registration(
         );
         let signature = (hash * signer_bls_private_key).into_affine();
         let maybe_input_data = chain_state
-            .da_signers
+            .da_registry
             .register_next_epoch(serialize_g1_point(signature))
             .calldata();
 

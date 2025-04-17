@@ -9,8 +9,8 @@ use std::{str::FromStr, sync::Arc, time::Duration};
 
 use anyhow::Result;
 
-use chain_utils::DA_SIGNER_ADDRESS;
-use contract_interface::{DAEntrance, DASigners};
+use chain_utils::{DA_REGISTRY_ADDRESS, DA_SIGNER_ADDRESS};
+use contract_interface::{DAEntrance, DARegistry, DASigners};
 use ethers::{
     providers::{Http, HttpRateLimitRetryPolicy, Provider, RetryClient, RetryClientBuilder},
     types::H160,
@@ -24,6 +24,7 @@ pub struct ChainState {
     provider: Arc<Provider<RetryClient<Http>>>,
     pub da_entrance: Arc<DAEntrance<Provider<RetryClient<Http>>>>,
     pub da_signers: Arc<DASigners<Provider<RetryClient<Http>>>>,
+    pub da_registry: Arc<DARegistry<Provider<RetryClient<Http>>>>,
     transactor: Arc<Mutex<Transactor>>,
     signer_address: H160,
     db: Arc<RwLock<Storage>>,
@@ -48,11 +49,16 @@ impl ChainState {
             H160::from_str(DA_SIGNER_ADDRESS).unwrap(),
             provider.clone(),
         ));
+        let da_registry = Arc::new(DARegistry::new(
+            H160::from_str(DA_REGISTRY_ADDRESS).unwrap(),
+            provider.clone(),
+        ));
         let signer_address = transactor.lock().await.signer_address();
         Ok(Self {
             provider,
             da_entrance,
             da_signers,
+            da_registry,
             transactor,
             signer_address,
             db,
