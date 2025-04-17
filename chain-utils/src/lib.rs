@@ -15,6 +15,7 @@ pub type DefaultMiddleware = Arc<DefaultMiddlewareInner>;
 pub type DefaultMiddlewareInner = SignerMiddleware<Provider<RetryClient<Http>>, LocalWallet>;
 
 pub const DA_SIGNER_ADDRESS: &str = "0x0000000000000000000000000000000000001000";
+pub const DA_REGISTRY_ADDRESS: &str = "0x20f30b2584f3096ea0d6c18c3b5cacc0585e12fc";
 
 pub async fn make_provider(eth_rpc_url: &str, eth_private_key: &H256) -> Result<DefaultMiddleware> {
     let client = reqwest::ClientBuilder::default()
