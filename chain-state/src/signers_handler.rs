@@ -123,7 +123,7 @@ impl ChainState {
                     socket,
                 );
                 let tx_request = TransactionRequest::new()
-                    .to(self.da_signers.address())
+                    .to(self.da_registry.address())
                     .data(input_data);
                 match self
                     .transactor
@@ -312,7 +312,7 @@ async fn check_new_registration(
                 chain_state.signer_address, next_epoch
             );
             let tx_request = TransactionRequest::new()
-                .to(chain_state.da_signers.address())
+                .to(chain_state.da_registry.address())
                 .data(input_data);
             match chain_state
                 .transactor
